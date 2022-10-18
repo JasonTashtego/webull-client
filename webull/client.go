@@ -14,7 +14,7 @@ import (
 	"net/url"
 	"time"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // Endpoints for the Webull API
@@ -25,16 +25,17 @@ const (
 	BrokerQuotesGWEndpoint = "https://quotes-gw.webullbroker.com/api"
 	SecuritiesEndpoint     = "https://securitiesapi.webullbroker.com/api"
 	UserBrokerEndpoint     = "https://userapi.webullbroker.com/api"
-	PaperTradeEndpoint     = "https://act.webullbroker.com/webull-paper-center/api"
-	PaperTradeEndpointV     = "https://act.webullfintech.com/webull-paper-center/api"
-	TradeEndpoint          = "https://tradeapi.webulltrade.com/api/trade"
-	StockInfoEndpoint      = "https://infoapi.webull.com/api"
+	//PaperTradeEndpoint     = "https://act.webullbroker.com/webull-paper-center/api"
+	PaperTradeEndpointV = "https://act.webullfintech.com/webull-paper-center/api"
+	TradeEndpoint       = "https://tradeapi.webulltrade.com/api/trade"
+	StockInfoEndpoint   = "https://infoapi.webull.com/api"
 )
+
 // ErrAuthExpired signals the user must retrieve a new token
 //var ErrAuthExpired = errors.New("Authentication token expired")
 
 // AuthExpiredError returned when token needs to be refreshed
-type AuthExpiredError struct {}
+type AuthExpiredError struct{}
 
 type userCallback func(context.Context, Topic, interface{}) error
 
@@ -61,10 +62,9 @@ type Client struct {
 
 	DeviceID string
 
-	httpClient *http.Client
+	httpClient         *http.Client
 	WebsocketCallbacks map[string]userCallback
 }
-
 
 // NewClient is a constructor for the Webull-Client client
 func NewClient(creds *Credentials) (c *Client, err error) {
@@ -175,7 +175,7 @@ func (c *Client) PostAndDecode(URL url.URL, dest interface{}, headers *map[strin
 	}
 }
 
-func parseAnything(data []byte) (output interface{}, err error){
+func parseAnything(data []byte) (output interface{}, err error) {
 	if err = json.Unmarshal(data, &output); err != nil {
 		return nil, fmt.Errorf("Unable to marshal body as interface")
 	}
@@ -221,7 +221,7 @@ func (c *Client) DoAndDecode(req *http.Request, dest interface{}) (err error) {
 			return fmt.Errorf("Unable to marshal body as interface")
 		}
 		dest = anyBody
-		return fmt.Errorf(e.Msg)
+		return fmt.Errorf(*e.Msg)
 	}
 	if err = json.Unmarshal(body, &dest); err != nil {
 		// anything

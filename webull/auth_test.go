@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 var testCacher = false

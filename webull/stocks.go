@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetTicker gets ticker information for a provided stock symbol
@@ -41,7 +41,7 @@ func (c *Client) GetTickerID(symbol string) (string, error) {
 		return "", fmt.Errorf("No ticker found")
 	}
 	for _, symbolInfo := range res.List {
-		return fmt.Sprintf("%d", symbolInfo.TickerId), nil
+		return fmt.Sprintf("%d", *symbolInfo.TickerId), nil
 	}
 	return "", nil
 }

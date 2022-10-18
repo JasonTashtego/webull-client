@@ -9,7 +9,7 @@ import (
 	"net/url"
 
 	"github.com/pkg/errors"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetTransfers returns Transfers.
@@ -25,9 +25,11 @@ func (c *Client) GetTransfers(accountID string, count uint32) (*model.Transfers,
 	headersMap[HeaderKeyDeviceID] = c.DeviceID
 
 	// Login request body
+	lrId := "0"
+	ct := float32(count)
 	request := model.GetTransfersRequest{
-		PageSize:     float32(count),
-		LastRecordId: "0",
+		PageSize:     &ct,
+		LastRecordId: &lrId,
 	}
 	requestBody, _ := json.Marshal(request)
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))

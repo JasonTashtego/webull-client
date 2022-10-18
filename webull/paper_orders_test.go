@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 func TestPlacePaperOrder(t *testing.T) {
@@ -29,7 +29,7 @@ func TestPlacePaperOrder(t *testing.T) {
 	asrt.Empty(err)
 	asrt.NotEmpty(paperAccID)
 
-	tickerID, err := c.GetTickerID("SPY")
+	tickerID, err := c.GetTickerID("GE")
 	asrt.Empty(err)
 	asrt.NotEmpty(tickerID)
 
@@ -44,15 +44,15 @@ func TestPlacePaperOrder(t *testing.T) {
 	})
 
 	res, err := c.PlacePaperOrder(paperAccID, model.PostStockOrderRequest{
-		Action:                    model.BUY,
-		ComboType:                 "NORMAL",
-		LmtPrice:                  200,
-		OrderType:                 model.MKT,
-		OutsideRegularTradingHour: false,
-		Quantity:                  1,
-		SerialId:                  c.UUID,
-		TickerId:                  int32(tickerIDNumber),
-		TimeInForce:               model.DAY,
+		Action:                    model.PtrOrderSide(model.BUY),
+		ComboType:                 model.PtrString("NORMAL"),
+		LmtPrice:                  model.PtrFloat32(68),
+		OrderType:                 model.PtrOrderType(model.LMT),
+		OutsideRegularTradingHour: model.PtrBool(false),
+		Quantity:                  model.PtrInt32(1),
+		SerialId:                  model.PtrString(c.UUID),
+		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
 	asrt.NotEmpty(res)
@@ -122,21 +122,21 @@ func TestCancelPaperOrder(t *testing.T) {
 
 	// Place Trade
 	placed, err := c.PlacePaperOrder(paperAccID, model.PostStockOrderRequest{
-		Action:                    model.BUY,
-		ComboType:                 "NORMAL",
-		LmtPrice:                  200,
-		OrderType:                 model.MKT,
-		OutsideRegularTradingHour: false,
-		Quantity:                  1,
-		SerialId:                  c.UUID,
-		TickerId:                  int32(tickerIDNumber),
-		TimeInForce:               model.DAY,
+		Action:                    model.PtrOrderSide(model.BUY),
+		ComboType:                 model.PtrString("NORMAL"),
+		LmtPrice:                  model.PtrFloat32(200),
+		OrderType:                 model.PtrOrderType(model.MKT),
+		OutsideRegularTradingHour: model.PtrBool(false),
+		Quantity:                  model.PtrInt32(1),
+		SerialId:                  model.PtrString(c.UUID),
+		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
 	asrt.NotEmpty(placed)
 
 	// Cancel Trade
-	cancelled, err := c.CancelPaperOrder(paperAccID, fmt.Sprintf("%d", placed.OrderId))
+	cancelled, err := c.CancelPaperOrder(paperAccID, fmt.Sprintf("%d", *placed.OrderId))
 	asrt.Empty(err)
 	asrt.NotEmpty(cancelled)
 }
@@ -176,30 +176,30 @@ func TestModifyPaperOrder(t *testing.T) {
 
 	// Place Trade
 	placed, err := c.PlacePaperOrder(paperAccID, model.PostStockOrderRequest{
-		Action:                    model.BUY,
-		ComboType:                 "NORMAL",
-		LmtPrice:                  200,
-		OrderType:                 model.MKT,
-		OutsideRegularTradingHour: false,
-		Quantity:                  1,
-		SerialId:                  c.UUID,
-		TickerId:                  int32(tickerIDNumber),
-		TimeInForce:               model.DAY,
+		Action:                    model.PtrOrderSide(model.BUY),
+		ComboType:                 model.PtrString("NORMAL"),
+		LmtPrice:                  model.PtrFloat32(200),
+		OrderType:                 model.PtrOrderType(model.MKT),
+		OutsideRegularTradingHour: model.PtrBool(false),
+		Quantity:                  model.PtrInt32(1),
+		SerialId:                  model.PtrString(c.UUID),
+		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
 	asrt.NotEmpty(placed)
 
 	// Cancel Trade
-	_, err = c.ModifyPaperOrder(paperAccID, fmt.Sprintf("%d", placed.OrderId), model.PostStockOrderRequest{
-		Action:                    model.BUY,
-		ComboType:                 "NORMAL",
-		LmtPrice:                  200,
-		OrderType:                 model.MKT,
-		OutsideRegularTradingHour: false,
-		Quantity:                  1,
-		SerialId:                  c.UUID,
-		TickerId:                  int32(tickerIDNumber),
-		TimeInForce:               model.DAY,
+	_, err = c.ModifyPaperOrder(paperAccID, fmt.Sprintf("%d", *placed.OrderId), model.PostStockOrderRequest{
+		Action:                    model.PtrOrderSide(model.BUY),
+		ComboType:                 model.PtrString("NORMAL"),
+		LmtPrice:                  model.PtrFloat32(200),
+		OrderType:                 model.PtrOrderType(model.MKT),
+		OutsideRegularTradingHour: model.PtrBool(false),
+		Quantity:                  model.PtrInt32(1),
+		SerialId:                  model.PtrString(c.UUID),
+		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
 }

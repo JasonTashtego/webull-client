@@ -5,7 +5,7 @@ import (
 	"net/url"
 	"strconv"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetAccounts gets all associated accounts
@@ -35,7 +35,7 @@ func (c *Client) GetAccountID() (string, error) {
 		return "", fmt.Errorf("No paper trade account found")
 	}
 	for _, acc := range res.Data {
-		return fmt.Sprintf("%d", acc.SecAccountId), nil
+		return strconv.FormatInt(int64(*acc.SecAccountId), 10), nil
 	}
 	return "", err
 }
@@ -49,7 +49,7 @@ func (c *Client) GetAccountIDs() (accountIDs []string, err error) {
 	} else {
 		accountIDs = make([]string, len(res.Data))
 		for i, acc := range res.Data {
-			accountIDs[i] = fmt.Sprintf("%d", acc.SecAccountId)
+			accountIDs[i] = strconv.FormatInt(int64(*acc.SecAccountId), 10)
 		}
 		return accountIDs, err
 	}
@@ -58,7 +58,7 @@ func (c *Client) GetAccountIDs() (accountIDs []string, err error) {
 // GetAccount gets account details for account `accountID`
 func (c *Client) GetAccount(accountID int) (*model.GetAccountResponse, error) {
 	var (
-		path       = TradeEndpoint + "/v2/home/" + strconv.Itoa(int(accountID))
+		path       = TradeEndpoint + "/v2/home/" + strconv.Itoa(accountID)
 		u, _       = url.Parse(path)
 		headersMap = make(map[string]string)
 		response   model.GetAccountResponse

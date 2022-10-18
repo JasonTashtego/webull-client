@@ -6,7 +6,7 @@ import (
 	// "fmt"
 	"net/url"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetOrders returns orders.
@@ -67,8 +67,8 @@ func (c *Client) PlaceOrder(accountID string, input model.PostStockOrderRequest)
 		response   model.PostOrderResponse
 	)
 
-	if input.SerialId == "" {
-		input.SerialId = c.UUID
+	if input.SerialId == nil || len(*input.SerialId) == 0 {
+		input.SerialId = &c.UUID
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken
@@ -84,7 +84,7 @@ func (c *Client) PlaceOrder(accountID string, input model.PostStockOrderRequest)
 	if err != nil {
 		return &response, err
 	}
-	if response.OrderId == 0 {
+	if response.OrderId == nil || *response.OrderId == 0 {
 		err = fmt.Errorf("OrderId should not be 0")
 	}
 	return &response, err
@@ -166,8 +166,8 @@ func (c *Client) ModifyOrder(accountID string, orderID string, input model.PostS
 	)
 	var response interface{}
 
-	if input.SerialId == "" {
-		input.SerialId = c.UUID
+	if input.SerialId == nil || len(*input.SerialId) == 0 {
+		input.SerialId = &c.UUID
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken

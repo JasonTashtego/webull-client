@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 func TestGetAccounts(t *testing.T) {
@@ -23,7 +23,7 @@ func TestGetAccounts(t *testing.T) {
 	asrt.Empty(err)
 	res, err := c.GetAccounts()
 	asrt.Empty(err)
-	asrt.True(res.Success)
+	asrt.True(*res.Success)
 }
 
 func TestGetAccount(t *testing.T) {
@@ -42,7 +42,7 @@ func TestGetAccount(t *testing.T) {
 	asrt.Empty(err)
 	accs, err := c.GetAccounts()
 	asrt.Empty(err)
-	asrt.True(accs.Success)
+	asrt.True(*accs.Success)
 	if accs.Data == nil {
 		t.Errorf("No accounts returned")
 		t.FailNow()
@@ -52,7 +52,7 @@ func TestGetAccount(t *testing.T) {
 		t.FailNow()
 	}
 
-	acc, err := c.GetAccount(int(accs.Data[0].SecAccountId))
+	acc, err := c.GetAccount(int(*accs.Data[0].SecAccountId))
 	asrt.Empty(err)
 	asrt.NotNil(acc)
 }
@@ -72,6 +72,7 @@ func TestGetAccountV5(t *testing.T) {
 		DeviceName:  deviceName(),
 	})
 	asrt.Empty(err)
+
 	err = c.TradeLogin(Credentials{
 		Username:    os.Getenv("WEBULL_USERNAME"),
 		AccountType: model.AccountType(2),
@@ -79,9 +80,11 @@ func TestGetAccountV5(t *testing.T) {
 		DeviceName:  deviceName(),
 	})
 	asrt.Empty(err)
+
 	accs, err := c.GetAccountV5()
 	asrt.Empty(err)
 	asrt.NotNil(accs)
+
 }
 
 func TestGetAccountID(t *testing.T) {

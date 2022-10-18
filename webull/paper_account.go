@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"net/url"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetPaperTradeAccounts gets information for all paper accounts.
 func (c *Client) GetPaperTradeAccounts() (*[]model.PaperAccount, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpoint + "/myaccounts/true")
+		u, _       = url.Parse(PaperTradeEndpointV + "/myaccounts/true")
 		headersMap = make(map[string]string)
 		response   []model.PaperAccount
 	)
@@ -35,7 +35,7 @@ func (c *Client) GetPaperTradeAccountID() (string, error) {
 		return "", fmt.Errorf("No paper trade account found")
 	}
 	for _, acc := range *res {
-		return fmt.Sprintf("%d", acc.Id), nil
+		return fmt.Sprintf("%d", *acc.Id), nil
 	}
 	return "", err
 }
@@ -49,7 +49,7 @@ func (c *Client) GetPaperTradeAccountIDs() ([]string, error) {
 	} else {
 		accountIDs := make([]string, len(*res))
 		for i, acc := range *res {
-			accountIDs[i] = fmt.Sprintf("%d", acc.Id)
+			accountIDs[i] = fmt.Sprintf("%d", *acc.Id)
 		}
 		return accountIDs, err
 	}

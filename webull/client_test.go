@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
-
 
 func TestConnectWebsockets(t *testing.T) {
 	var (

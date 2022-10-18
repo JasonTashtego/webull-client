@@ -16,8 +16,8 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
 	"golang.org/x/oauth2"
+	model "quantfu.com/webull/openapi"
 )
 
 const (
@@ -61,15 +61,17 @@ func (c *Client) Token() (*oauth2.Token, error) {
 		deviceName = DefaultDeviceName
 	}
 	// Login request body
+	grade := int32(0)
+	rgn := int32(1)
 	requestBody, err := json.Marshal(model.PostLoginParametersRequest{
-		Account:     c.Username,
-		AccountType: c.AccountType,
-		DeviceId:    cliID,
-		DeviceName:  deviceName,
-		Grade:       0.0,
-		Pwd:         c.HashedPassword,
-		RegionId:    1,
-		ExtInfo:     model.PostLoginParametersRequestExtInfo{VerificationCode: c.MFA},
+		Account:     &c.Username,
+		AccountType: &c.AccountType,
+		DeviceId:    &cliID,
+		DeviceName:  &deviceName,
+		Grade:       &grade,
+		Pwd:         &c.HashedPassword,
+		RegionId:    &rgn,
+		ExtInfo:     &model.PostLoginParametersRequestExtInfo{VerificationCode: &c.MFA},
 	})
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	req.Header.Add("Content-Type", "application/json")
@@ -92,7 +94,7 @@ func (c *Client) Token() (*oauth2.Token, error) {
 		if err != nil {
 			return nil, fmt.Errorf("got response %q and could not decode error body %q", res.Status, b.String())
 		}
-		return nil, fmt.Errorf(e.Msg)
+		return nil, fmt.Errorf(*e.Msg)
 	}
 
 	if err != nil {
@@ -104,12 +106,12 @@ func (c *Client) Token() (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	tok.Expiry, err = time.Parse(DefaultTokenExpiryFormat, response.TokenExpireTime)
+	tok.Expiry, err = time.Parse(DefaultTokenExpiryFormat, *response.TokenExpireTime)
 	c.AccessTokenExpiration = tok.Expiry
 	tok.TokenType = "Token"
-	tok.AccessToken, c.AccessToken = response.AccessToken, response.AccessToken
-	tok.RefreshToken, c.RefreshToken = response.RefreshToken, response.RefreshToken
-	c.UUID = response.Uuid
+	tok.AccessToken, c.AccessToken = *response.AccessToken, *response.AccessToken
+	tok.RefreshToken, c.RefreshToken = *response.RefreshToken, *response.RefreshToken
+	c.UUID = *response.Uuid
 	return &tok, nil
 }
 
@@ -160,17 +162,21 @@ func (c *Client) Login(creds Credentials) (err error) {
 	}
 	c.AccountType = creds.AccountType
 
+	grade := int32(0)
+	rgn := int32(1)
+
 	// Login request body
 	request := model.PostLoginParametersRequest{
-		Account:     c.Username,
-		AccountType: c.AccountType,
-		DeviceId:    c.DeviceID,
-		DeviceName:  c.DeviceName,
-		Grade:       0.0,
-		Pwd:         c.HashedPassword,
-		RegionId:    1,
+		Account:     &c.Username,
+		AccountType: &c.AccountType,
+		DeviceId:    &c.DeviceID,
+		DeviceName:  &c.DeviceName,
+		Grade:       &grade,
+		Pwd:         &c.HashedPassword,
+		RegionId:    &rgn,
+		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
 	}
-	request.ExtInfo.VerificationCode = creds.MFA
+	request.ExtInfo.VerificationCode = &creds.MFA
 	requestBody, _ := json.Marshal(request)
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	req.Header.Add(HeaderKeyDeviceID, c.DeviceID)
@@ -181,10 +187,10 @@ func (c *Client) Login(creds Credentials) (err error) {
 	if err != nil {
 		return err
 	}
-	c.AccessToken = response.AccessToken
-	c.AccessTokenExpiration, err = time.Parse(DefaultTokenExpiryFormat, response.TokenExpireTime)
-	c.RefreshToken = response.RefreshToken
-	c.UUID = response.Uuid
+	c.AccessToken = *response.AccessToken
+	c.AccessTokenExpiration, err = time.Parse(DefaultTokenExpiryFormat, *response.TokenExpireTime)
+	c.RefreshToken = *response.RefreshToken
+	c.UUID = *response.Uuid
 	return
 }
 
@@ -236,19 +242,27 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 			return fmt.Errorf("Password has not been set")
 		}
 	}
+
 	c.AccountType = creds.AccountType
+
+	grade := int32(0)
+	rgn := int32(6)
+
+	devId := DefaultDeviceID
+	devNm := DefaultDeviceName
 
 	// Login request body
 	request := model.PostLoginParametersRequest{
-		Account:     creds.Username,
-		AccountType: creds.AccountType,
-		DeviceId:    DefaultDeviceID,
-		DeviceName:  DefaultDeviceName,
-		Grade:       0.0,
-		Pwd:         c.HashedPassword,
-		RegionId:    6,
+		Account:     &creds.Username,
+		AccountType: &creds.AccountType,
+		DeviceId:    &devId,
+		DeviceName:  &devNm,
+		Grade:       &grade,
+		Pwd:         &c.HashedPassword,
+		RegionId:    &rgn,
+		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
 	}
-	request.ExtInfo.VerificationCode = creds.MFA
+	request.ExtInfo.VerificationCode = &creds.MFA
 	requestBody, _ := json.Marshal(request)
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
 	req.Header.Add(HeaderKeyDeviceID, c.DeviceID)
@@ -261,9 +275,9 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 	if err != nil {
 		return err
 	}
-	if response.Success {
-		c.TradeToken = response.Data.TradeToken
-		c.TradeTokenExpiration = time.Now().Add(time.Duration(response.Data.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
+	if *response.Success {
+		c.TradeToken = *response.Data.TradeToken
+		c.TradeTokenExpiration = time.Now().Add(time.Duration(*response.Data.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
 	}
 	return nil
 }

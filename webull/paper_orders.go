@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // CancelAllPaperOrders is a wrapper for cancelling a number of WORKING orders.
@@ -18,13 +19,13 @@ func (c *Client) CancelAllPaperOrders(accountID string) ([]int32, error) {
 	} else {
 		cancelledOrders := make([]int32, 0)
 		for _, order := range *paperOrders {
-			cancellation, err := c.CancelPaperOrder(accountID, fmt.Sprintf("%d", order.OrderId))
+			cancellation, err := c.CancelPaperOrder(accountID, fmt.Sprintf("%d", *order.OrderId))
 			if err != nil {
 				fmt.Printf("TODO: fix marshalling error\n")
-				cancelledOrders = append(cancelledOrders, order.OrderId)
+				cancelledOrders = append(cancelledOrders, *order.OrderId)
 				//return cancelledOrders, err
 			} else {
-				cancelledOrders = append(cancelledOrders, order.OrderId)
+				cancelledOrders = append(cancelledOrders, *order.OrderId)
 			}
 			fmt.Printf("cancellation: %v", cancellation)
 		}
@@ -35,13 +36,13 @@ func (c *Client) CancelAllPaperOrders(accountID string) ([]int32, error) {
 // PlacePaperOrder places paper trade
 func (c *Client) PlacePaperOrder(accountID string, input model.PostStockOrderRequest) (*model.PostPaperOrderResponse, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpoint + "/paper/1/acc/" + accountID + "/orderop/place/" + fmt.Sprintf("%d", input.TickerId))
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/place/" + strconv.FormatInt(int64(*input.TickerId), 10))
 		headersMap = make(map[string]string)
 		response   model.PostPaperOrderResponse
 	)
 
-	if input.SerialId == "" {
-		input.SerialId = c.UUID
+	if input.SerialId == nil || len(*input.SerialId) == 0 {
+		input.SerialId = &c.UUID
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken
@@ -62,7 +63,7 @@ func (c *Client) PlacePaperOrder(accountID string, input model.PostStockOrderReq
 // CancelPaperOrder cancels paper trade
 func (c *Client) CancelPaperOrder(accountID, orderID string) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpoint + "/paper/1/acc/" + accountID + "/orderop/cancel/" + orderID)
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/cancel/" + orderID)
 		headersMap = make(map[string]string)
 	)
 	var response interface{}
@@ -81,13 +82,13 @@ func (c *Client) CancelPaperOrder(accountID, orderID string) (*interface{}, erro
 // ModifyPaperOrder modifies paper trade
 func (c *Client) ModifyPaperOrder(accountID string, orderID string, input model.PostStockOrderRequest) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpoint + "/paper/1/acc/" + accountID + "/orderop/modify/" + orderID)
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/modify/" + orderID)
 		headersMap = make(map[string]string)
 	)
 	var response interface{}
 
-	if input.SerialId == "" {
-		input.SerialId = c.UUID
+	if input.SerialId == nil || len(*input.SerialId) == 0 {
+		input.SerialId = &c.UUID
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken
@@ -108,7 +109,7 @@ func (c *Client) ModifyPaperOrder(accountID string, orderID string, input model.
 // GetPaperOrders gets user paper trades
 func (c *Client) GetPaperOrders(paperAccountID string, startTime string, dateType string, orderStatus model.OrderStatus) (*[]model.PaperOrder, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpoint + "/paper/1/acc/" + paperAccountID + "/order")
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + paperAccountID + "/order")
 		headersMap = make(map[string]string)
 		urlMap     = make(map[string]string)
 		response   []model.PaperOrder

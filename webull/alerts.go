@@ -3,7 +3,7 @@ package webull
 import (
 	"net/url"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetAlerts gets all alerts.

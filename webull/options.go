@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/url"
 
-	model "gitlab.com/brokerage-api/webull-openapi/openapi"
+	model "quantfu.com/webull/openapi"
 )
 
 // GetStockOptions queries for options quotes.
