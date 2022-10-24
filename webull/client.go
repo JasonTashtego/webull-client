@@ -89,6 +89,10 @@ func NewClient(creds *Credentials) (c *Client, err error) {
 	return
 }
 
+func (c *Client) HttpClient() *http.Client {
+	return c.httpClient
+}
+
 // RegisterCallback registers a callback, overriding an existing callback if one exists
 func (c *Client) RegisterCallback(override bool, callback func(context.Context, Topic, interface{}) error, topic ...string) error {
 	if c.WebsocketCallbacks == nil {

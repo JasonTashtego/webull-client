@@ -58,7 +58,7 @@ func (c *Client) GetAccountIDs() (accountIDs []string, err error) {
 // GetAccount gets account details for account `accountID`
 func (c *Client) GetAccount(accountID int) (*model.GetAccountResponse, error) {
 	var (
-		path       = TradeEndpoint + "/v2/home/" + strconv.Itoa(accountID)
+		path       = TradeEndpoint + "/v3/home/" + strconv.Itoa(accountID)
 		u, _       = url.Parse(path)
 		headersMap = make(map[string]string)
 		response   model.GetAccountResponse
