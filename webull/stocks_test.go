@@ -60,7 +60,12 @@ func TestGetRealtimeStockQuote(t *testing.T) {
 	})
 	asrt.Empty(err)
 	asrt.NotNil(c)
-	res, err := c.GetRealtimeStockQuote("SPY")
+
+	tickerID, err := c.GetTickerID("AAPL")
+	asrt.Empty(err)
+	asrt.NotEmpty(tickerID)
+
+	res, err := c.GetRealtimeStockQuote(tickerID)
 	asrt.Empty(err)
 	asrt.NotEmpty(res)
 }

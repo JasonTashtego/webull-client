@@ -6,7 +6,6 @@ import (
 	"time"
 )
 
-
 const (
 	// HeaderKeyAccessToken variable should be used instead of hard-coding the header key for auth tokens.
 	HeaderKeyAccessToken = "access_token"
@@ -31,6 +30,7 @@ func getTimeSeconds() string {
 func deviceName() string {
 	return fmt.Sprintf(os.Getenv("WEBULL_USERNAME") + "@go-client")
 }
+
 /*
 // String returns a pointer to the string value passed in.
 func String(v string) *string {

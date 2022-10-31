@@ -3,9 +3,8 @@ package webull
 import (
 	"fmt"
 	"net/url"
-	"strconv"
-
 	model "quantfu.com/webull/openapi"
+	"strconv"
 )
 
 // GetAccounts gets all associated accounts
@@ -74,7 +73,7 @@ func (c *Client) GetAccount(accountID int) (*model.GetAccountResponse, error) {
 	return &response, err
 }
 
-// GetAccountV5 gets account details for account. Note: Doesn't work.
+// GetAccountV5 gets account details for account.
 func (c *Client) GetAccountV5() (*model.GetAccountsResponseV5, error) {
 	var (
 		path       = TradeEndpoint + "/v5/home"
