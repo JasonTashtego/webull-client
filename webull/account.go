@@ -24,31 +24,48 @@ func (c *Client) GetAccounts() (*model.GetSecurityAccountsResponse, error) {
 	return &response, err
 }
 
+// GetAccounts gets all associated accounts
+func (c *Client) GetAccountsV5() (*model.GetSecurityAccountsResponseV5, error) {
+	var (
+		u, _       = url.Parse(TradeEndpointV + "/tradetab/display")
+		response   model.GetSecurityAccountsResponseV5
+		headersMap = make(map[string]string)
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	err := c.GetAndDecode(*u, &response, &headersMap, nil)
+	if err != nil {
+		return &response, err
+	}
+	return &response, err
+}
+
 // GetAccountID gets an account ID
-func (c *Client) GetAccountID() (string, error) {
+func (c *Client) GetAccountID() (int64, error) {
 	res, err := c.GetAccounts()
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	if res == nil {
-		return "", fmt.Errorf("No paper trade account found")
+		return 0, fmt.Errorf("No paper trade account found")
 	}
 	for _, acc := range res.Data {
-		return strconv.FormatInt(int64(*acc.SecAccountId), 10), nil
+		return int64(*acc.SecAccountId), nil
 	}
-	return "", err
+	return 0, err
 }
 
 // GetAccountIDs gets all account IDs
-func (c *Client) GetAccountIDs() (accountIDs []string, err error) {
+func (c *Client) GetAccountIDs() (accountIDs []int64, err error) {
 	if res, err := c.GetAccounts(); err != nil {
 		return accountIDs, err
 	} else if res == nil {
 		return accountIDs, fmt.Errorf("No paper trade account found")
 	} else {
-		accountIDs = make([]string, len(res.Data))
+		accountIDs = make([]int64, len(res.Data))
 		for i, acc := range res.Data {
-			accountIDs[i] = strconv.FormatInt(int64(*acc.SecAccountId), 10)
+			accountIDs[i] = int64(*acc.SecAccountId)
 		}
 		return accountIDs, err
 	}

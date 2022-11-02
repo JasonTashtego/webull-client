@@ -19,6 +19,8 @@ const (
 	QueryKeyTickerID = "tickerID"
 	// QueryKeyDerivativeIDs variable should be used instead of hard-coding the query parameter derivative IDs.
 	QueryKeyDerivativeIDs = "derivativeIds"
+
+	HeaderLzone = "lzone"
 )
 
 func getTimeSeconds() string {

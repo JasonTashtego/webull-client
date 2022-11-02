@@ -24,12 +24,15 @@ const (
 	BrokerQuotesEndpoint   = "https://quoteapi.webullbroker.com/api"
 	BrokerQuotesGWEndpoint = "https://quotes-gw.webullbroker.com/api"
 	SecuritiesEndpoint     = "https://securitiesapi.webullbroker.com/api"
-	UserBrokerEndpoint     = "https://userapi.webullbroker.com/api"
+	//UserBrokerEndpoint     = "https://userapi.webullbroker.com/api"
+	UserBrokerEndpoint = "https://userapi.webull.com/api"
 	//PaperTradeEndpoint     = "https://act.webullbroker.com/webull-paper-center/api"
 	PaperTradeEndpointV = "https://act.webullfintech.com/webull-paper-center/api"
 	TradeEndpoint       = "https://tradeapi.webulltrade.com/api/trade"
-	TradeEndpointV      = "https://trade.webullfintech.com/api/trading/v1/global/trade"
-	StockInfoEndpoint   = "https://infoapi.webull.com/api"
+	TradeEndpointV      = "https://trade.webullfintech.com/api/trading/v1/global"
+	OrderEndpointV      = "https://ustrade.webullfinance.com/api/trading/v1/webull"
+
+	StockInfoEndpoint = "https://infoapi.webull.com/api"
 )
 
 // ErrAuthExpired signals the user must retrieve a new token
@@ -65,6 +68,8 @@ type Client struct {
 
 	httpClient         *http.Client
 	WebsocketCallbacks map[string]userCallback
+
+	sessionHeaders map[string]string
 }
 
 // NewClient is a constructor for the Webull-Client client
@@ -72,6 +77,8 @@ func NewClient(creds *Credentials) (c *Client, err error) {
 	c = &Client{
 		httpClient: &http.Client{Timeout: time.Second * 10},
 	}
+	c.sessionHeaders = make(map[string]string)
+
 	if creds != nil {
 		c.DeviceID = creds.DeviceID
 		c.Username = creds.Username
@@ -92,6 +99,10 @@ func NewClient(creds *Credentials) (c *Client, err error) {
 
 func (c *Client) HttpClient() *http.Client {
 	return c.httpClient
+}
+
+func (c *Client) AddSessionHeader(k string, v string) {
+	c.sessionHeaders[k] = v
 }
 
 // RegisterCallback registers a callback, overriding an existing callback if one exists
@@ -142,6 +153,11 @@ func (c *Client) GetAndDecode(URL url.URL, dest interface{}, headers *map[string
 	} else if req == nil {
 		return fmt.Errorf("unable to create request")
 	} else {
+		if len(c.sessionHeaders) > 0 {
+			for key, val := range c.sessionHeaders {
+				req.Header.Add(key, val)
+			}
+		}
 		if headers != nil {
 			for key, val := range *headers {
 				req.Header.Add(key, val)
@@ -166,11 +182,17 @@ func (c *Client) PostAndDecode(URL url.URL, dest interface{}, headers *map[strin
 		}
 	}
 	URL.RawQuery = v.Encode()
-	if req, err := http.NewRequest(http.MethodPost, URL.String(), bytes.NewReader(payload)); err != nil {
+	uStr := URL.String()
+	if req, err := http.NewRequest(http.MethodPost, uStr, bytes.NewReader(payload)); err != nil {
 		return err
 	} else if req == nil {
 		return fmt.Errorf("unable to create request")
 	} else {
+		if len(c.sessionHeaders) > 0 {
+			for key, val := range c.sessionHeaders {
+				req.Header.Add(key, val)
+			}
+		}
 		if headers != nil {
 			for key, val := range *headers {
 				req.Header.Add(key, val)

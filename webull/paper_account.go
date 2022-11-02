@@ -26,30 +26,30 @@ func (c *Client) GetPaperTradeAccounts() (*[]model.PaperAccount, error) {
 }
 
 // GetPaperTradeAccountID is a a helper function for getting a single paper trading account ID
-func (c *Client) GetPaperTradeAccountID() (string, error) {
+func (c *Client) GetPaperTradeAccountID() (int64, error) {
 	res, err := c.GetPaperTradeAccounts()
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	if res == nil {
-		return "", fmt.Errorf("No paper trade account found")
+		return 0, fmt.Errorf("No paper trade account found")
 	}
 	for _, acc := range *res {
-		return fmt.Sprintf("%d", *acc.Id), nil
+		return int64(*acc.Id), nil
 	}
-	return "", err
+	return 0, err
 }
 
 // GetPaperTradeAccountIDs is a a helper function for getting all paper trading account IDs.
-func (c *Client) GetPaperTradeAccountIDs() ([]string, error) {
+func (c *Client) GetPaperTradeAccountIDs() ([]int64, error) {
 	if res, err := c.GetPaperTradeAccounts(); err != nil {
-		return []string{}, err
+		return []int64{}, err
 	} else if res == nil {
-		return []string{}, fmt.Errorf("No paper trade account found")
+		return []int64{}, fmt.Errorf("No paper trade account found")
 	} else {
-		accountIDs := make([]string, len(*res))
+		accountIDs := make([]int64, len(*res))
 		for i, acc := range *res {
-			accountIDs[i] = fmt.Sprintf("%d", *acc.Id)
+			accountIDs[i] = int64(*acc.Id)
 		}
 		return accountIDs, err
 	}

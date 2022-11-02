@@ -11,7 +11,7 @@ import (
 
 // CancelAllPaperOrders is a wrapper for cancelling a number of WORKING orders.
 // Note: no pagination so no guarantee all orders will cancel
-func (c *Client) CancelAllPaperOrders(accountID string) ([]int32, error) {
+func (c *Client) CancelAllPaperOrders(accountID int64) ([]int32, error) {
 	if paperOrders, err := c.GetPaperOrders(accountID, "", "", model.WORKING); err != nil {
 		return nil, err
 	} else if paperOrders == nil {
@@ -34,9 +34,9 @@ func (c *Client) CancelAllPaperOrders(accountID string) ([]int32, error) {
 }
 
 // PlacePaperOrder places paper trade
-func (c *Client) PlacePaperOrder(accountID string, input model.PostStockOrderRequest) (*model.PostPaperOrderResponse, error) {
+func (c *Client) PlacePaperOrder(accountID int64, input model.PostStockOrderRequest) (*model.PostPaperOrderResponse, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/place/" + strconv.FormatInt(int64(*input.TickerId), 10))
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/place/" + strconv.FormatInt(int64(*input.TickerId), 10))
 		headersMap = make(map[string]string)
 		response   model.PostPaperOrderResponse
 	)
@@ -61,9 +61,9 @@ func (c *Client) PlacePaperOrder(accountID string, input model.PostStockOrderReq
 }
 
 // CancelPaperOrder cancels paper trade
-func (c *Client) CancelPaperOrder(accountID, orderID string) (*interface{}, error) {
+func (c *Client) CancelPaperOrder(accountID int64, orderID string) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/cancel/" + orderID)
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/cancel/" + orderID)
 		headersMap = make(map[string]string)
 	)
 	var response interface{}
@@ -80,9 +80,9 @@ func (c *Client) CancelPaperOrder(accountID, orderID string) (*interface{}, erro
 }
 
 // ModifyPaperOrder modifies paper trade
-func (c *Client) ModifyPaperOrder(accountID string, orderID string, input model.PostStockOrderRequest) (*interface{}, error) {
+func (c *Client) ModifyPaperOrder(accountID int64, orderID string, input model.PostStockOrderRequest) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + accountID + "/orderop/modify/" + orderID)
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/modify/" + orderID)
 		headersMap = make(map[string]string)
 	)
 	var response interface{}
@@ -107,9 +107,9 @@ func (c *Client) ModifyPaperOrder(accountID string, orderID string, input model.
 }
 
 // GetPaperOrders gets user paper trades
-func (c *Client) GetPaperOrders(paperAccountID string, startTime string, dateType string, orderStatus model.OrderStatus) (*[]model.PaperOrder, error) {
+func (c *Client) GetPaperOrders(paperAccountID int64, startTime string, dateType string, orderStatus model.OrderStatus) (*[]model.PaperOrder, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + paperAccountID + "/order")
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(paperAccountID, 10) + "/order")
 		headersMap = make(map[string]string)
 		urlMap     = make(map[string]string)
 		response   []model.PaperOrder

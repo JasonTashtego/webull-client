@@ -3,6 +3,7 @@ package webull
 import (
 	"bytes"
 	"encoding/json"
+	"strconv"
 
 	// "fmt"
 	"net/http"
@@ -13,9 +14,9 @@ import (
 )
 
 // GetTransfers returns Transfers.
-func (c *Client) GetTransfers(accountID string, count uint32) (*model.Transfers, error) {
+func (c *Client) GetTransfers(accountID int64, count uint32) (*model.Transfers, error) {
 	var (
-		u, _       = url.Parse(TradeEndpoint + "/asset/" + accountID + "/getWebullTransferList")
+		u, _       = url.Parse(TradeEndpoint + "/asset/" + strconv.FormatInt(accountID, 10) + "/getWebullTransferList")
 		response   *model.Transfers
 		headersMap = make(map[string]string)
 		// queryParams = make(map[string]string)

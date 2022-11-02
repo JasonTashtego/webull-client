@@ -46,7 +46,7 @@ type Credentials struct {
 // Token implements TokenSource
 func (c *Client) Token() (*oauth2.Token, error) {
 	var (
-		u, _       = url.Parse(UserBrokerEndpoint + "/passport/login/v3/account")
+		u, _       = url.Parse(UserBrokerEndpoint + "/passport/login/v5/account")
 		response   model.PostLoginResponse
 		httpClient = http.Client{Timeout: time.Second * 10}
 		cliID      = c.DeviceID
@@ -118,7 +118,7 @@ func (c *Client) Token() (*oauth2.Token, error) {
 // Login implements TokenSource
 func (c *Client) Login(creds Credentials) (err error) {
 	var (
-		u, _     = url.Parse(UserBrokerEndpoint + "/passport/login/v3/account")
+		u, _     = url.Parse(UserBrokerEndpoint + "/passport/login/v5/account")
 		hasher   = md5.New()
 		response model.PostLoginResponse
 	)
@@ -279,6 +279,92 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 		c.TradeToken = *response.Data.TradeToken
 		c.TradeTokenExpiration = time.Now().Add(time.Duration(*response.Data.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
 	}
+	return nil
+}
+
+// TradeLogin implements TokenSource
+func (c *Client) TradeLoginV5(creds Credentials) (err error) {
+	var (
+		// Login URL
+		u, _     = url.Parse(TradeEndpointV + "/trade/login")
+		response model.PostTradeTokenResponseData
+		hasher   = md5.New()
+		pwd      string
+	)
+
+	// Client ID
+	if creds.DeviceID != "" {
+		c.DeviceID = creds.DeviceID
+	} else {
+		if c.DeviceID == "" {
+			c.DeviceID = DefaultDeviceID
+		}
+	}
+
+	// Client Name
+	if creds.DeviceName != "" {
+		c.DeviceName = creds.DeviceName
+	} else {
+		if c.DeviceName == "" {
+			c.DeviceName = DefaultDeviceName
+		}
+	}
+
+	// Client Name
+	if creds.Username != "" {
+		c.Username = creds.Username
+	} else {
+		if c.Username == "" {
+			return fmt.Errorf("Username required")
+		}
+	}
+
+	// Client Name
+	if creds.TradePIN != "" {
+		// UTF-8 encoded salted password
+		hasher.Write([]byte(PasswordSalt + creds.TradePIN))
+		pwd = hex.EncodeToString(hasher.Sum(nil))
+		c.HashedPassword = pwd
+	} else {
+		if c.HashedPassword == "" {
+			return fmt.Errorf("Password has not been set")
+		}
+	}
+
+	c.AccountType = creds.AccountType
+
+	grade := int32(0)
+	rgn := int32(6)
+
+	devId := DefaultDeviceID
+	devNm := DefaultDeviceName
+
+	// Login request body
+	request := model.PostLoginParametersRequest{
+		Account:     &creds.Username,
+		AccountType: &creds.AccountType,
+		DeviceId:    &devId,
+		DeviceName:  &devNm,
+		Grade:       &grade,
+		Pwd:         &c.HashedPassword,
+		RegionId:    &rgn,
+		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
+	}
+	request.ExtInfo.VerificationCode = &creds.MFA
+	requestBody, _ := json.Marshal(request)
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
+	req.Header.Add(HeaderKeyDeviceID, c.DeviceID)
+	req.Header.Add(HeaderKeyAccessToken, c.AccessToken)
+	if err != nil {
+		return errors.Wrap(err, "could not create request")
+	}
+	// Send and parse request
+	err = c.DoAndDecode(req, &response)
+	if err != nil {
+		return err
+	}
+	c.TradeToken = *response.TradeToken
+	c.TradeTokenExpiration = time.Now().Add(time.Duration(*response.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
 	return nil
 }
 

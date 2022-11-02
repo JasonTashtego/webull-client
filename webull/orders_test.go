@@ -3,6 +3,7 @@ package webull
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,12 +29,40 @@ func TestGetOrders(t *testing.T) {
 		t.Fail()
 	} else {
 		for _, accID := range accountIDs {
-			orders, err := c.GetOrders(accID, model.FILLED, 200)
+			orders, err := c.GetOrders(strconv.FormatInt(accID, 10), "all", 200)
 			asrt.Empty(err)
 			asrt.NotEmpty(orders)
 		}
 	}
+}
 
+func TestGetOrdersV5(t *testing.T) {
+	if os.Getenv("WEBULL_USERNAME") == "" {
+		t.Skip("No username set")
+		return
+	}
+	asrt := assert.New(t)
+	c, err := NewClient(&Credentials{
+		Username:    os.Getenv("WEBULL_USERNAME"),
+		Password:    os.Getenv("WEBULL_PASSWORD"),
+		AccountType: model.AccountType(2),
+		DeviceName:  deviceName(),
+	})
+	asrt.Empty(err)
+	asrt.NotNil(c)
+	if accts, err := c.GetAccountsV5(); err != nil {
+		t.Log(err)
+		t.Fail()
+	} else {
+
+		c.AddSessionHeader(HeaderLzone, *accts.AccountList[0].Rzone)
+
+		for _, acct := range accts.AccountList {
+			orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), "all", 200)
+			asrt.Empty(err)
+			asrt.NotEmpty(orders)
+		}
+	}
 }
 
 func TestIsTradeable(t *testing.T) {

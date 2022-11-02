@@ -3,6 +3,8 @@ package webull
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
+
 	// "fmt"
 	"net/url"
 
@@ -60,9 +62,9 @@ func (c *Client) IsTradeable(tickerID string) (*model.GetIsTradeableResponse, er
 }
 
 // PlaceOrder places trade (TODO)
-func (c *Client) PlaceOrder(accountID string, input model.PostStockOrderRequest) (*model.PostOrderResponse, error) {
+func (c *Client) PlaceOrder(accountID int64, input model.PostStockOrderRequest) (*model.PostOrderResponse, error) {
 	var (
-		u, _       = url.Parse(TradeEndpoint + "/order/" + accountID + "/placeStockOrder")
+		u, _       = url.Parse(TradeEndpoint + "/order/" + strconv.FormatInt(accountID, 10) + "/placeStockOrder")
 		headersMap = make(map[string]string)
 		response   model.PostOrderResponse
 	)
@@ -91,9 +93,9 @@ func (c *Client) PlaceOrder(accountID string, input model.PostStockOrderRequest)
 }
 
 // CheckOtocoOrder checks OTOCO order (TODO)
-func (c *Client) CheckOtocoOrder(accountID string, input model.PostOtocoOrderRequest) (*interface{}, error) {
+func (c *Client) CheckOtocoOrder(accountID int64, input model.PostOtocoOrderRequest) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(TradeEndpoint + "/v2/corder/stock/place/" + accountID)
+		u, _       = url.Parse(TradeEndpoint + "/v2/corder/stock/place/" + strconv.FormatInt(accountID, 10))
 		headersMap = make(map[string]string)
 		response   interface{}
 	)
@@ -183,5 +185,54 @@ func (c *Client) ModifyOrder(accountID string, orderID string, input model.PostS
 	if err != nil {
 		return &response, err
 	}
+	return &response, err
+}
+
+type GetOrdersRequest struct {
+	DateType        string      `json:"dateType"`
+	PageSize        int         `json:"pageSize"`
+	StartTimeStr    string      `json:"startTimeStr"`
+	EndTimeStr      string      `json:"endTimeStr"`
+	Action          interface{} `json:"action,omitempty"`
+	LastCreateTime0 int64       `json:"lastCreateTime0"`
+	SecAccountID    int64       `json:"secAccountId"`
+	Status          string      `json:"status"`
+}
+
+// GetOrdersV returns orders.
+func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, count int32) (*[]model.OrderItemV5, error) {
+	var (
+		u, _        = url.Parse(OrderEndpointV + "/order/list")
+		response    []model.OrderItemV5
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	queryParams["secAccountId"] = strconv.FormatInt(int64(accountID), 10)
+
+	input := GetOrdersRequest{
+		DateType:     "ORDER",
+		PageSize:     int(count),
+		StartTimeStr: "2000-1-1",
+		EndTimeStr:   "",
+		SecAccountID: accountID,
+		Status:       string(status),
+	}
+
+	payload, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.PostAndDecode(*u, &response, &headersMap, &queryParams, payload)
+	if err != nil {
+		return &response, err
+	}
+
 	return &response, err
 }
