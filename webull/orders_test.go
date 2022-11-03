@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	model "quantfu.com/webull/openapi"
@@ -57,10 +58,14 @@ func TestGetOrdersV5(t *testing.T) {
 
 		c.AddSessionHeader(HeaderLzone, *accts.AccountList[0].Rzone)
 
+		st := time.Time{}
+		et := time.Now()
 		for _, acct := range accts.AccountList {
-			orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), "all", 200)
-			asrt.Empty(err)
-			asrt.NotEmpty(orders)
+			if acct.SecAccountId != nil {
+				orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), "filled", st, et, 200)
+				asrt.Empty(err)
+				asrt.NotEmpty(orders)
+			}
 		}
 	}
 }

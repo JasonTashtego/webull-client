@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	// "fmt"
 	"net/url"
@@ -200,7 +201,7 @@ type GetOrdersRequest struct {
 }
 
 // GetOrdersV returns orders.
-func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, count int32) (*[]model.OrderItemV5, error) {
+func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime time.Time, endTime time.Time, count int32) (*[]model.OrderItemV5, error) {
 	var (
 		u, _        = url.Parse(OrderEndpointV + "/order/list")
 		response    []model.OrderItemV5
@@ -213,15 +214,20 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, count in
 	headersMap[HeaderKeyTradeToken] = c.TradeToken
 	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
 
-	queryParams["secAccountId"] = strconv.FormatInt(int64(accountID), 10)
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
 
 	input := GetOrdersRequest{
 		DateType:     "ORDER",
 		PageSize:     int(count),
-		StartTimeStr: "2000-1-1",
-		EndTimeStr:   "",
 		SecAccountID: accountID,
 		Status:       string(status),
+	}
+
+	if stTime.Year() > 2000 {
+		input.StartTimeStr = stTime.Format("2006-01-02")
+	}
+	if endTime.Year() > 2000 {
+		input.EndTimeStr = endTime.Format("2006-01-02")
 	}
 
 	payload, err := json.Marshal(input)
