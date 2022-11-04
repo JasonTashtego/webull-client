@@ -62,7 +62,7 @@ func TestGetOrdersV5(t *testing.T) {
 		et := time.Now()
 		for _, acct := range accts.AccountList {
 			if acct.SecAccountId != nil {
-				orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), "filled", st, et, 200)
+				orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), model.FILLED, st, et, 200)
 				asrt.Empty(err)
 				asrt.NotEmpty(orders)
 			}
@@ -124,7 +124,7 @@ func TestPlaceTrade(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(true),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(913243251),
+		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -207,7 +207,7 @@ func TestCancelTrade(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(true),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(913243251),
+		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -255,7 +255,7 @@ func TestModifyTrade(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(true),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(913243251),
+		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -270,7 +270,7 @@ func TestModifyTrade(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(true),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(913243251),
+		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -312,7 +312,7 @@ func TestCheckOtocoOrder(t *testing.T) {
 				OutsideRegularTradingHour: model.PtrBool(true),
 				Quantity:                  model.PtrInt32(1),
 				SerialId:                  model.PtrString(c.UUID),
-				TickerId:                  model.PtrInt32(913243251),
+				TickerId:                  model.PtrInt64(913243251),
 				TimeInForce:               model.PtrTif(model.DAY),
 			},
 			{
@@ -321,7 +321,7 @@ func TestCheckOtocoOrder(t *testing.T) {
 				Quantity:                  model.PtrInt32(1),
 				OutsideRegularTradingHour: model.PtrBool(false),
 				Action:                    model.PtrOrderSide(model.SELL),
-				TickerId:                  model.PtrInt32(913243251),
+				TickerId:                  model.PtrInt64(913243251),
 				LmtPrice:                  model.PtrFloat32(30),
 				ComboType:                 model.PtrString("STOP_LOSS"),
 			},
@@ -331,7 +331,7 @@ func TestCheckOtocoOrder(t *testing.T) {
 				Quantity:                  model.PtrInt32(1),
 				OutsideRegularTradingHour: model.PtrBool(false),
 				Action:                    model.PtrOrderSide(model.SELL),
-				TickerId:                  model.PtrInt32(913243251),
+				TickerId:                  model.PtrInt64(913243251),
 				LmtPrice:                  model.PtrFloat32(50),
 				ComboType:                 model.PtrString("STOP_PROFIT"),
 			},

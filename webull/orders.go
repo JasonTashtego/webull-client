@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	// "fmt"
@@ -240,5 +241,45 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime t
 		return &response, err
 	}
 
+	if len(response) > 0 {
+
+		// asking for all ?
+		if strings.ToLower(input.Status) != strings.ToLower(string(model.ALL)) {
+			// filter based on status
+			rsFiltered := make([]model.OrderItemV5, 0)
+			for _, o := range response {
+				if strings.ToLower(o.GetStatus()) == strings.ToLower(input.Status) {
+					rsFiltered = append(rsFiltered, o)
+				}
+			}
+			return &rsFiltered, nil
+		}
+	}
+	return &response, err
+}
+
+// GetFilledOrdersByTicker returns orders.
+func (c *Client) GetFilledOrdersByTicker(accountID int64, tickerId int64, lastFillTimeMs int64, count int32) (*[]model.OrderFill, error) {
+	var (
+		u, _        = url.Parse(OrderEndpointV + "/order/filledOrders")
+		response    []model.OrderFill
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
+	queryParams["tickerId"] = strconv.FormatInt(tickerId, 10)
+	queryParams["lastFilledTime"] = strconv.FormatInt(lastFillTimeMs, 10)
+	queryParams["pageSize"] = strconv.FormatInt(int64(count), 10)
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
+	if err != nil {
+		return &response, err
+	}
 	return &response, err
 }

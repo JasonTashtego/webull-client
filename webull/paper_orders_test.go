@@ -33,7 +33,7 @@ func TestPlacePaperOrder(t *testing.T) {
 	asrt.Empty(err)
 	asrt.NotEmpty(tickerID)
 
-	tickerIDNumber, err := strconv.Atoi(tickerID)
+	tickerIDNumber, err := strconv.ParseInt(tickerID, 10, 64)
 
 	err = c.TradeLogin(Credentials{
 		Username:    os.Getenv("WEBULL_USERNAME"),
@@ -51,7 +51,7 @@ func TestPlacePaperOrder(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(false),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TickerId:                  model.PtrInt64(tickerIDNumber),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -110,7 +110,7 @@ func TestCancelPaperOrder(t *testing.T) {
 	asrt.Empty(err)
 	asrt.NotEmpty(tickerID)
 
-	tickerIDNumber, err := strconv.Atoi(tickerID)
+	tickerIDNumber, err := strconv.ParseInt(tickerID, 10, 64)
 
 	err = c.TradeLogin(Credentials{
 		Username:    os.Getenv("WEBULL_USERNAME"),
@@ -129,7 +129,7 @@ func TestCancelPaperOrder(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(false),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TickerId:                  model.PtrInt64(tickerIDNumber),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -164,7 +164,7 @@ func TestModifyPaperOrder(t *testing.T) {
 	asrt.Empty(err)
 	asrt.NotEmpty(tickerID)
 
-	tickerIDNumber, err := strconv.Atoi(tickerID)
+	tickerIDNumber, err := strconv.ParseInt(tickerID, 10, 64)
 
 	err = c.TradeLogin(Credentials{
 		Username:    os.Getenv("WEBULL_USERNAME"),
@@ -183,7 +183,7 @@ func TestModifyPaperOrder(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(false),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TickerId:                  model.PtrInt64(tickerIDNumber),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
@@ -198,7 +198,7 @@ func TestModifyPaperOrder(t *testing.T) {
 		OutsideRegularTradingHour: model.PtrBool(false),
 		Quantity:                  model.PtrInt32(1),
 		SerialId:                  model.PtrString(c.UUID),
-		TickerId:                  model.PtrInt32(int32(tickerIDNumber)),
+		TickerId:                  model.PtrInt64(tickerIDNumber),
 		TimeInForce:               model.PtrTif(model.DAY),
 	})
 	asrt.Empty(err)
