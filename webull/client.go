@@ -30,7 +30,7 @@ const (
 	PaperTradeEndpointV = "https://act.webullfintech.com/webull-paper-center/api"
 	TradeEndpoint       = "https://tradeapi.webulltrade.com/api/trade"
 	TradeEndpointV      = "https://trade.webullfintech.com/api/trading/v1/global"
-	OrderEndpointV      = "https://ustrade.webullfinance.com/api/trading/v1/webull"
+	UsTradeEndpointV    = "https://ustrade.webullfinance.com/api/trading/v1/webull"
 
 	StockInfoEndpoint = "https://infoapi.webull.com/api"
 )

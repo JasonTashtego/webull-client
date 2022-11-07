@@ -62,7 +62,7 @@ func TestGetOrdersV5(t *testing.T) {
 		et := time.Now()
 		for _, acct := range accts.AccountList {
 			if acct.SecAccountId != nil {
-				orders, err := c.GetOrdersV5(int64(*acct.SecAccountId), model.FILLED, st, et, 200)
+				orders, err := c.GetOrdersV5(acct.GetSecAccountId(), model.FILLED, st, et, 200)
 				asrt.Empty(err)
 				asrt.NotEmpty(orders)
 			}

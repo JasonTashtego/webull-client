@@ -5,6 +5,7 @@ import (
 	"net/url"
 	model "quantfu.com/webull/openapi"
 	"strconv"
+	"time"
 )
 
 // GetAccounts gets all associated accounts
@@ -105,6 +106,35 @@ func (c *Client) GetAccountV5() (*model.GetAccountsResponseV5, error) {
 	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
 
 	err := c.GetAndDecode(*u, &response, &headersMap, nil)
+	if err != nil {
+		return &response, err
+	}
+	return &response, err
+}
+
+// GetAccountV5 gets account details for account.
+func (c *Client) GetNetLiquidation(accountID int64, stTime time.Time) (*[]model.NetLiqidationTrendInner, error) {
+	var (
+		path        = UsTradeEndpointV + "/profitloss/account/listNetLiquidationTrend"
+		u, _        = url.Parse(path)
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+		response    []model.NetLiqidationTrendInner
+	)
+
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	if stTime.Year() > 2000 {
+		stTimeStr := stTime.Format("2006-01-02")
+		queryParams["startDate"] = stTimeStr
+	}
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
 	if err != nil {
 		return &response, err
 	}

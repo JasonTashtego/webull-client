@@ -14,7 +14,7 @@ import (
 )
 
 // GetOrders returns orders.
-func (c *Client) GetOrders(accountID string, status model.OrderStatus, count int32) (*[]model.GetOrdersItem, error) {
+func (c *Client) GetOrders(accountID string, status model.OrderStatus, count int32) ([]*model.GetOrdersItem, error) {
 	var (
 		u, _        = url.Parse(TradeEndpoint + "/v2/option/list")
 		response    []model.GetOrdersItem
@@ -33,12 +33,18 @@ func (c *Client) GetOrders(accountID string, status model.OrderStatus, count int
 	queryParams["pageSize"] = fmt.Sprintf("%d", count)
 	queryParams["status"] = string(status)
 
+	ords := make([]*model.GetOrdersItem, 0)
 	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
 	if err != nil {
-		return &response, err
+		return ords, err
 	}
 
-	return &response, err
+	for _, item := range response {
+		o := &model.GetOrdersItem{}
+		*o = item
+		ords = append(ords, o)
+	}
+	return ords, err
 }
 
 // IsTradeable returns information on where a specific ticker is traded
@@ -202,9 +208,9 @@ type GetOrdersRequest struct {
 }
 
 // GetOrdersV returns orders.
-func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime time.Time, endTime time.Time, count int32) (*[]model.OrderItemV5, error) {
+func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime time.Time, endTime time.Time, count int32) ([]*model.OrderItemV5, error) {
 	var (
-		u, _        = url.Parse(OrderEndpointV + "/order/list")
+		u, _        = url.Parse(UsTradeEndpointV + "/order/list")
 		response    []model.OrderItemV5
 		headersMap  = make(map[string]string)
 		queryParams = make(map[string]string)
@@ -238,30 +244,31 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime t
 
 	err = c.PostAndDecode(*u, &response, &headersMap, &queryParams, payload)
 	if err != nil {
-		return &response, err
+		return nil, err
 	}
 
+	rsFiltered := make([]*model.OrderItemV5, 0)
 	if len(response) > 0 {
-
 		// asking for all ?
 		if strings.ToLower(input.Status) != strings.ToLower(string(model.ALL)) {
 			// filter based on status
-			rsFiltered := make([]model.OrderItemV5, 0)
 			for _, o := range response {
 				if strings.ToLower(o.GetStatus()) == strings.ToLower(input.Status) {
-					rsFiltered = append(rsFiltered, o)
+
+					ord := &model.OrderItemV5{}
+					*ord = o
+					rsFiltered = append(rsFiltered, ord)
 				}
 			}
-			return &rsFiltered, nil
 		}
 	}
-	return &response, err
+	return rsFiltered, nil
 }
 
 // GetFilledOrdersByTicker returns orders.
-func (c *Client) GetFilledOrdersByTicker(accountID int64, tickerId int64, lastFillTimeMs int64, count int32) (*[]model.OrderFill, error) {
+func (c *Client) GetFilledOrdersByTicker(accountID int64, tickerId int64, lastFillTimeMs int64, count int32) ([]*model.OrderFill, error) {
 	var (
-		u, _        = url.Parse(OrderEndpointV + "/order/filledOrders")
+		u, _        = url.Parse(UsTradeEndpointV + "/order/filledOrders")
 		response    []model.OrderFill
 		headersMap  = make(map[string]string)
 		queryParams = make(map[string]string)
@@ -277,9 +284,16 @@ func (c *Client) GetFilledOrdersByTicker(accountID int64, tickerId int64, lastFi
 	queryParams["lastFilledTime"] = strconv.FormatInt(lastFillTimeMs, 10)
 	queryParams["pageSize"] = strconv.FormatInt(int64(count), 10)
 
+	fills := make([]*model.OrderFill, 0)
 	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
 	if err != nil {
-		return &response, err
+		return fills, nil
 	}
-	return &response, err
+
+	for _, fill := range response {
+		of := &model.OrderFill{}
+		*of = fill
+		fills = append(fills, of)
+	}
+	return fills, err
 }
