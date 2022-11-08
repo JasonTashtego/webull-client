@@ -277,7 +277,9 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 	}
 	if *response.Success {
 		c.TradeToken = *response.Data.TradeToken
-		c.TradeTokenExpiration = time.Now().Add(time.Duration(*response.Data.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
+		tokenTimeMs := *response.Data.TradeTokenExpireIn
+		tmNowUtc := time.Now().UTC()
+		c.TradeTokenExpiration = tmNowUtc.Add(time.Duration(tokenTimeMs) * time.Millisecond) // Assuming ms?
 	}
 	return nil
 }
@@ -364,7 +366,10 @@ func (c *Client) TradeLoginV5(creds Credentials) (err error) {
 		return err
 	}
 	c.TradeToken = *response.TradeToken
-	c.TradeTokenExpiration = time.Now().Add(time.Duration(*response.TradeTokenExpireIn) * time.Millisecond) // Assuming ms?
+
+	tokenTimeMs := *response.TradeTokenExpireIn
+	tmNowUtc := time.Now().UTC()
+	c.TradeTokenExpiration = tmNowUtc.Add(time.Duration(tokenTimeMs) * time.Millisecond) // Assuming ms?
 	return nil
 }
 
@@ -401,4 +406,18 @@ func (c *Client) GetMFA(creds Credentials) (err error) {
 		return err
 	}
 	return nil
+}
+
+func (c *Client) IsTradeTokenValid() bool {
+	if len(c.TradeToken) > 0 {
+		tmNow := time.Now().UTC()
+
+		// 5-min early renwal, token time is at least 5 minutes in the future
+		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - (5 * 60)) {
+			return true
+		}
+		
+		return false
+	}
+	return false
 }

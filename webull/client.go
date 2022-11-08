@@ -226,6 +226,7 @@ func (c *Client) DoAndDecode(req *http.Request, dest interface{}) (err error) {
 	if err != nil {
 		return err
 	}
+
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {

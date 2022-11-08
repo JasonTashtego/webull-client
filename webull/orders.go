@@ -232,6 +232,8 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime t
 
 	if stTime.Year() > 2000 {
 		input.StartTimeStr = stTime.Format("2006-01-02")
+	} else {
+		input.StartTimeStr = "2015-01-01"
 	}
 	if endTime.Year() > 2000 {
 		input.EndTimeStr = endTime.Format("2006-01-02")
@@ -296,4 +298,37 @@ func (c *Client) GetFilledOrdersByTicker(accountID int64, tickerId int64, lastFi
 		fills = append(fills, of)
 	}
 	return fills, err
+}
+
+type CancelStOrderResponse struct {
+	Result       bool   `json:"result"`
+	OrderId      int64  `json:"orderId"`
+	LastSerialId string `json:"lastSerialId"`
+}
+
+// Cancel order
+func (c *Client) CancelOrderV5(accountID int64, orderId int64) (bool, error) {
+
+	var (
+		u, _        = url.Parse(UsTradeEndpointV + "/order/stockOrderCancel")
+		response    CancelStOrderResponse
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
+	queryParams["serialId"] = c.UUID
+	queryParams["orderId"] = fmt.Sprintf("%d", orderId)
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
+	if err != nil {
+		return false, err
+	}
+
+	return response.Result, nil
 }
