@@ -332,3 +332,36 @@ func (c *Client) CancelOrderV5(accountID int64, orderId int64) (bool, error) {
 
 	return response.Result, nil
 }
+
+func (c *Client) PlaceOrderV5(accountID int64, input model.PostStockOrderRequest) (*model.PostOrderResponse, error) {
+	var (
+		u, _        = url.Parse(UsTradeEndpointV + "/order/stockOrderPlace")
+		response    model.PostOrderResponse
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
+
+	if input.SerialId == nil || len(*input.SerialId) == 0 {
+		input.SerialId = &c.UUID
+	}
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+	payload, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.PostAndDecode(*u, &response, &headersMap, &queryParams, payload)
+	if err != nil {
+		return &response, err
+	}
+	if response.OrderId == nil || *response.OrderId == 0 {
+		err = fmt.Errorf("OrderId should not be 0")
+	}
+	return &response, err
+}

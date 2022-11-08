@@ -32,24 +32,24 @@ func (c *Client) GetTicker(symbol string) (*model.LookupTickerResponse, error) {
 }
 
 // GetTickerID is a helper function for getting a ticker ID from a stock symbol
-func (c *Client) GetTickerID(symbol string) (string, error) {
+func (c *Client) GetTickerID(symbol string) (int64, error) {
 	res, err := c.GetTicker(symbol)
 	if err != nil {
-		return "", err
+		return 0, err
 	}
 	if len(res.List) < 1 {
-		return "", fmt.Errorf("No ticker found")
+		return 0, fmt.Errorf("No ticker found")
 	}
 	for _, symbolInfo := range res.List {
-		return fmt.Sprintf("%d", *symbolInfo.TickerId), nil
+		return *symbolInfo.TickerId, nil
 	}
-	return "", nil
+	return 0, nil
 }
 
 // GetRealtimeStockQuote gets real-time data for ticker `tickerID`
-func (c *Client) GetRealtimeStockQuote(tickerID string) (*model.GetStockQuoteResponse, error) {
+func (c *Client) GetRealtimeStockQuote(tickerID int64) (*model.GetStockQuoteResponse, error) {
 	var (
-		u, _       = url.Parse(QuotesEndpoint + "/quote/tickerRealTimes/v5/" + tickerID)
+		u, _       = url.Parse(QuotesEndpoint + "/quote/tickerRealTimes/v5/" + strconv.FormatInt(tickerID, 10))
 		response   model.GetStockQuoteResponse
 		headersMap = make(map[string]string)
 	)
