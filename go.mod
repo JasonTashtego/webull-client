@@ -2,10 +2,12 @@ module quantfu.com/webull-client
 
 require (
 	github.com/eclipse/paho.mqtt.golang v1.4.1
+	github.com/google/uuid v1.3.0
 	github.com/pkg/errors v0.9.1
 	github.com/stretchr/testify v1.3.0
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	quantfu.com/webull/openapi v0.0.0
+
 )
 
 require (

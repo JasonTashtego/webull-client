@@ -8,6 +8,7 @@ import (
 	"time"
 
 	// "fmt"
+	"github.com/google/uuid"
 	"net/url"
 
 	model "quantfu.com/webull/openapi"
@@ -344,7 +345,8 @@ func (c *Client) PlaceOrderV5(accountID int64, input model.PostStockOrderRequest
 	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
 
 	if input.SerialId == nil || len(*input.SerialId) == 0 {
-		input.SerialId = &c.UUID
+		sid := uuid.New().String()
+		input.SerialId = model.PtrString(sid)
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken
