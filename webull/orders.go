@@ -263,6 +263,12 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime t
 					rsFiltered = append(rsFiltered, ord)
 				}
 			}
+		} else {
+			for _, o := range response {
+				ord := &model.OrderItemV5{}
+				*ord = o
+				rsFiltered = append(rsFiltered, ord)
+			}
 		}
 	}
 	return rsFiltered, nil
@@ -347,6 +353,10 @@ func (c *Client) PlaceOrderV5(accountID int64, input model.PostStockOrderRequest
 	if input.SerialId == nil || len(*input.SerialId) == 0 {
 		sid := uuid.New().String()
 		input.SerialId = model.PtrString(sid)
+
+		rqid := uuid.New().String()
+		rqid = strings.ReplaceAll(rqid, "-", "")
+		headersMap["reqid"] = rqid
 	}
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken

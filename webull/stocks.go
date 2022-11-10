@@ -33,14 +33,14 @@ func (c *Client) GetTicker(symbol string) (*model.LookupTickerResponse, error) {
 
 // GetTickerID is a helper function for getting a ticker ID from a stock symbol
 func (c *Client) GetTickerID(symbol string) (int64, error) {
-	res, err := c.GetTicker(symbol)
+	res, err := c.GetTickerV5(symbol)
 	if err != nil {
 		return 0, err
 	}
-	if len(res.List) < 1 {
+	if len(res.Data) < 1 {
 		return 0, fmt.Errorf("No ticker found")
 	}
-	for _, symbolInfo := range res.List {
+	for _, symbolInfo := range res.Data {
 		return *symbolInfo.TickerId, nil
 	}
 	return 0, nil
@@ -115,6 +115,30 @@ func (c *Client) GetStockAnalysis(tickerID string) (*model.GetStockAnalysisRespo
 
 	headersMap[HeaderKeyAccessToken] = c.AccessToken
 	headersMap[HeaderKeyDeviceID] = c.DeviceID
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
+	if err != nil {
+		return &response, err
+	}
+
+	return &response, err
+}
+
+// GetTicker gets ticker information for a provided stock symbol
+func (c *Client) GetTickerV5(symbol string) (*model.GetTickerV5Response, error) {
+	var (
+		u, _        = url.Parse(BrokerQuotesGWEndpointV + "/search/pc/tickers")
+		response    model.GetTickerV5Response
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+
+	queryParams["keyword"] = symbol
+	queryParams["pageIndex"] = strconv.Itoa(1)
+	queryParams["pageSize"] = strconv.Itoa(20)
 
 	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
 	if err != nil {

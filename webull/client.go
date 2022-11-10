@@ -27,10 +27,11 @@ const (
 	//UserBrokerEndpoint     = "https://userapi.webullbroker.com/api"
 	UserBrokerEndpoint = "https://userapi.webull.com/api"
 	//PaperTradeEndpoint     = "https://act.webullbroker.com/webull-paper-center/api"
-	PaperTradeEndpointV = "https://act.webullfintech.com/webull-paper-center/api"
-	TradeEndpoint       = "https://tradeapi.webulltrade.com/api/trade"
-	TradeEndpointV      = "https://trade.webullfintech.com/api/trading/v1/global"
-	UsTradeEndpointV    = "https://ustrade.webullfinance.com/api/trading/v1/webull"
+	PaperTradeEndpointV     = "https://act.webullfintech.com/webull-paper-center/api"
+	TradeEndpoint           = "https://tradeapi.webulltrade.com/api/trade"
+	TradeEndpointV          = "https://trade.webullfintech.com/api/trading/v1/global"
+	UsTradeEndpointV        = "https://ustrade.webullfinance.com/api/trading/v1/webull"
+	BrokerQuotesGWEndpointV = "https://quotes-gw.webullfintech.com/api"
 
 	StockInfoEndpoint = "https://infoapi.webull.com/api"
 )
