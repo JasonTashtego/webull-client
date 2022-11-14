@@ -377,3 +377,64 @@ func (c *Client) PlaceOrderV5(accountID int64, input model.PostStockOrderRequest
 	}
 	return &response, err
 }
+
+type PostComboOrderResponse struct {
+	ComboId      *string `json:"comboId,omitempty"`
+	LastSerialId *string `json:"lastSerialId,omitempty"`
+}
+
+type PostComboRequest struct {
+	Orders   []model.PostStockOrderRequest `json:"newOrders,omitempty"`
+	SerialId *string                       `json:"serialId,omitempty"`
+}
+
+func (c *Client) PlaceOrderV5Combo(accountID int64,
+	slOrder model.PostStockOrderRequest,
+	tpOrder model.PostStockOrderRequest) (*PostComboOrderResponse, error) {
+	var (
+		u, _        = url.Parse(UsTradeEndpointV + "/order/comboOrderPlace")
+		response    PostComboOrderResponse
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+	)
+
+	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
+
+	if slOrder.SerialId == nil || len(*slOrder.SerialId) == 0 {
+		sid := uuid.New().String()
+		slOrder.SerialId = model.PtrString(sid)
+	}
+
+	if tpOrder.SerialId == nil || len(*tpOrder.SerialId) == 0 {
+		sid := uuid.New().String()
+		tpOrder.SerialId = model.PtrString(sid)
+	}
+
+	osid := uuid.New().String()
+	pcr := PostComboRequest{
+		Orders:   []model.PostStockOrderRequest{slOrder, tpOrder},
+		SerialId: model.PtrString(osid),
+	}
+
+	rqid := uuid.New().String()
+	rqid = strings.ReplaceAll(rqid, "-", "")
+	headersMap["reqid"] = rqid
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+	payload, err := json.Marshal(pcr)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.PostAndDecode(*u, &response, &headersMap, &queryParams, payload)
+	if err != nil {
+		return &response, err
+	}
+	if response.ComboId == nil || len(*response.ComboId) == 0 {
+		err = fmt.Errorf("ComboId should not be empty")
+	}
+	return &response, err
+}
