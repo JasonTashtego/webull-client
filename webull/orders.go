@@ -389,8 +389,8 @@ type PostComboRequest struct {
 }
 
 func (c *Client) PlaceOrderV5Combo(accountID int64,
-	slOrder model.PostStockOrderRequest,
-	tpOrder model.PostStockOrderRequest) (*PostComboOrderResponse, error) {
+	slOrder *model.PostStockOrderRequest,
+	tpOrder *model.PostStockOrderRequest) (*PostComboOrderResponse, error) {
 	var (
 		u, _        = url.Parse(UsTradeEndpointV + "/order/comboOrderPlace")
 		response    PostComboOrderResponse
@@ -399,21 +399,25 @@ func (c *Client) PlaceOrderV5Combo(accountID int64,
 	)
 
 	queryParams["secAccountId"] = strconv.FormatInt(accountID, 10)
-
-	if slOrder.SerialId == nil || len(*slOrder.SerialId) == 0 {
-		sid := uuid.New().String()
-		slOrder.SerialId = model.PtrString(sid)
-	}
-
-	if tpOrder.SerialId == nil || len(*tpOrder.SerialId) == 0 {
-		sid := uuid.New().String()
-		tpOrder.SerialId = model.PtrString(sid)
-	}
-
 	osid := uuid.New().String()
 	pcr := PostComboRequest{
-		Orders:   []model.PostStockOrderRequest{slOrder, tpOrder},
+		Orders:   nil,
 		SerialId: model.PtrString(osid),
+	}
+
+	if slOrder != nil {
+		if slOrder.SerialId == nil || len(*slOrder.SerialId) == 0 {
+			sid := uuid.New().String()
+			slOrder.SerialId = model.PtrString(sid)
+		}
+		pcr.Orders = append(pcr.Orders, *slOrder)
+	}
+	if tpOrder != nil {
+		if tpOrder.SerialId == nil || len(*tpOrder.SerialId) == 0 {
+			sid := uuid.New().String()
+			tpOrder.SerialId = model.PtrString(sid)
+		}
+		pcr.Orders = append(pcr.Orders, *tpOrder)
 	}
 
 	rqid := uuid.New().String()
