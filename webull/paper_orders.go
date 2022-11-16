@@ -34,11 +34,11 @@ func (c *Client) CancelAllPaperOrders(accountID int64) ([]int32, error) {
 }
 
 // PlacePaperOrder places paper trade
-func (c *Client) PlacePaperOrder(accountID int64, input model.PostStockOrderRequest) (*model.PostPaperOrderResponse, error) {
+func (c *Client) PlacePaperOrder(accountID int64, input model.PostStockOrderRequest) (*model.PostOrderResponse, error) {
 	var (
 		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/place/" + strconv.FormatInt(int64(*input.TickerId), 10))
 		headersMap = make(map[string]string)
-		response   model.PostPaperOrderResponse
+		response   model.PostOrderResponse
 	)
 
 	if input.SerialId == nil || len(*input.SerialId) == 0 {
