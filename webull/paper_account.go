@@ -3,6 +3,8 @@ package webull
 import (
 	"fmt"
 	"net/url"
+	"strconv"
+	"time"
 
 	model "quantfu.com/webull/openapi"
 )
@@ -77,3 +79,70 @@ func (c *Client) ResetPaperAccount(newBalance int32) (*model.ResetPaperAccountRe
 	return &response, err
 }
 */
+
+func (c *Client) GetNetLiquidationPaper(accountID int64, stTime time.Time) (*[]model.NetLiqidationTrendInner, error) {
+	var (
+		path        = PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/accountpl/summary"
+		u, _        = url.Parse(path)
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+		response    model.PaperSummary
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	if stTime.Year() > 2000 {
+		stTimeStr := stTime.Format("2006-01-02")
+		queryParams["startDate"] = stTimeStr
+	}
+
+	rsp := make([]model.NetLiqidationTrendInner, 0)
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
+	if err != nil {
+		return &rsp, err
+	}
+
+	for _, s := range response.NetLiquidationHistories.Items {
+
+		nl := model.NetLiqidationTrendInner{
+			Currency:       nil,
+			Date:           s.Date,
+			NetLiquidation: s.Value,
+		}
+		rsp = append(rsp, nl)
+	}
+	return &rsp, err
+}
+
+func (c *Client) GetPaperAccountSummary(accountID int64) (*model.PaperAccountSummary, error) {
+
+	var (
+		path        = PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10)
+		u, _        = url.Parse(path)
+		headersMap  = make(map[string]string)
+		queryParams = make(map[string]string)
+		response    model.PaperAccountSummary
+	)
+
+	headersMap[HeaderKeyAccessToken] = c.AccessToken
+	headersMap[HeaderKeyDeviceID] = c.DeviceID
+	headersMap[HeaderKeyTradeToken] = c.TradeToken
+	headersMap[HeaderKeyTradeTime] = getTimeSeconds()
+
+	err := c.GetAndDecode(*u, &response, &headersMap, &queryParams)
+	if err != nil {
+		return nil, err
+	}
+
+	for i, p := range response.Positions {
+		if p.GetTickerType() == "EQUITY" {
+			response.Positions[i].SetAssetType("stock")
+		}
+	}
+
+	return &response, err
+}

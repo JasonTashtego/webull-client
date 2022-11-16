@@ -118,11 +118,11 @@ func TestPlaceTrade(t *testing.T) {
 
 	res, err := c.PlaceOrder(accID, model.PostStockOrderRequest{
 		Action:                    model.PtrOrderSide(model.BUY),
-		ComboType:                 model.PtrString("NORMAL"),
-		LmtPrice:                  model.PtrFloat32(0.05),
+		ComboType:                 model.PtrComboType("NORMAL"),
+		LmtPrice:                  model.PtrFloat64(0.05),
 		OrderType:                 model.PtrOrderType(model.LMT),
 		OutsideRegularTradingHour: model.PtrBool(true),
-		Quantity:                  model.PtrInt32(1),
+		Quantity:                  model.PtrFloat64(1),
 		SerialId:                  model.PtrString(c.UUID),
 		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
@@ -201,11 +201,11 @@ func TestCancelTrade(t *testing.T) {
 	// Place Trade
 	placed, err := c.PlaceOrder(accID, model.PostStockOrderRequest{
 		Action:                    model.PtrOrderSide(model.BUY),
-		ComboType:                 model.PtrString("NORMAL"),
-		LmtPrice:                  model.PtrFloat32(4.69),
+		ComboType:                 model.PtrComboType("NORMAL"),
+		LmtPrice:                  model.PtrFloat64(4.69),
 		OrderType:                 model.PtrOrderType(model.MKT),
 		OutsideRegularTradingHour: model.PtrBool(true),
-		Quantity:                  model.PtrInt32(1),
+		Quantity:                  model.PtrFloat64(1),
 		SerialId:                  model.PtrString(c.UUID),
 		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
@@ -214,7 +214,7 @@ func TestCancelTrade(t *testing.T) {
 	asrt.NotEmpty(placed)
 
 	// Cancel Trade
-	cancelled, err := c.CancelPaperOrder(accID, fmt.Sprintf("%d", *placed.OrderId))
+	cancelled, err := c.CancelPaperOrder(accID, *placed.OrderId)
 	asrt.Empty(err)
 	asrt.NotEmpty(cancelled)
 }
@@ -249,11 +249,11 @@ func TestModifyTrade(t *testing.T) {
 	// Place Trade
 	placed, err := c.PlacePaperOrder(accID, model.PostStockOrderRequest{
 		Action:                    model.PtrOrderSide(model.BUY),
-		ComboType:                 model.PtrString("NORMAL"),
-		LmtPrice:                  model.PtrFloat32(4.69),
+		ComboType:                 model.PtrComboType("NORMAL"),
+		LmtPrice:                  model.PtrFloat64(4.69),
 		OrderType:                 model.PtrOrderType(model.MKT),
 		OutsideRegularTradingHour: model.PtrBool(true),
-		Quantity:                  model.PtrInt32(1),
+		Quantity:                  model.PtrFloat64(1),
 		SerialId:                  model.PtrString(c.UUID),
 		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
@@ -264,11 +264,11 @@ func TestModifyTrade(t *testing.T) {
 	// Cancel Trade
 	_, err = c.ModifyPaperOrder(accID, fmt.Sprintf("%d", *placed.OrderId), model.PostStockOrderRequest{
 		Action:                    model.PtrOrderSide(model.BUY),
-		ComboType:                 model.PtrString("NORMAL"),
-		LmtPrice:                  model.PtrFloat32(4.69),
+		ComboType:                 model.PtrComboType("NORMAL"),
+		LmtPrice:                  model.PtrFloat64(4.69),
 		OrderType:                 model.PtrOrderType(model.MKT),
 		OutsideRegularTradingHour: model.PtrBool(true),
-		Quantity:                  model.PtrInt32(1),
+		Quantity:                  model.PtrFloat64(1),
 		SerialId:                  model.PtrString(c.UUID),
 		TickerId:                  model.PtrInt64(913243251),
 		TimeInForce:               model.PtrTif(model.DAY),
@@ -306,11 +306,11 @@ func TestCheckOtocoOrder(t *testing.T) {
 		[]model.PostStockOrderRequest{
 			{
 				Action:                    model.PtrOrderSide(model.BUY),
-				ComboType:                 model.PtrString("MASTER"),
-				LmtPrice:                  model.PtrFloat32(4.69),
+				ComboType:                 model.PtrComboType("MASTER"),
+				LmtPrice:                  model.PtrFloat64(4.69),
 				OrderType:                 model.PtrOrderType(model.LMT),
 				OutsideRegularTradingHour: model.PtrBool(true),
-				Quantity:                  model.PtrInt32(1),
+				Quantity:                  model.PtrFloat64(1),
 				SerialId:                  model.PtrString(c.UUID),
 				TickerId:                  model.PtrInt64(913243251),
 				TimeInForce:               model.PtrTif(model.DAY),
@@ -318,22 +318,22 @@ func TestCheckOtocoOrder(t *testing.T) {
 			{
 				OrderType:                 model.PtrOrderType(model.STP),
 				TimeInForce:               model.PtrTif(model.DAY),
-				Quantity:                  model.PtrInt32(1),
+				Quantity:                  model.PtrFloat64(1),
 				OutsideRegularTradingHour: model.PtrBool(false),
 				Action:                    model.PtrOrderSide(model.SELL),
 				TickerId:                  model.PtrInt64(913243251),
-				LmtPrice:                  model.PtrFloat32(30),
-				ComboType:                 model.PtrString("STOP_LOSS"),
+				LmtPrice:                  model.PtrFloat64(30),
+				ComboType:                 model.PtrComboType("STOP_LOSS"),
 			},
 			{
 				OrderType:                 model.PtrOrderType(model.LMT),
 				TimeInForce:               model.PtrTif(model.DAY),
-				Quantity:                  model.PtrInt32(1),
+				Quantity:                  model.PtrFloat64(1),
 				OutsideRegularTradingHour: model.PtrBool(false),
 				Action:                    model.PtrOrderSide(model.SELL),
 				TickerId:                  model.PtrInt64(913243251),
-				LmtPrice:                  model.PtrFloat32(50),
-				ComboType:                 model.PtrString("STOP_PROFIT"),
+				LmtPrice:                  model.PtrFloat64(50),
+				ComboType:                 model.PtrComboType("STOP_PROFIT"),
 			},
 		},
 	}

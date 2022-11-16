@@ -73,9 +73,9 @@ func (c *Client) GetAccountIDs() (accountIDs []int64, err error) {
 }
 
 // GetAccount gets account details for account `accountID`
-func (c *Client) GetAccount(accountID int) (*model.GetAccountResponse, error) {
+func (c *Client) GetAccount(accountID int64) (*model.GetAccountResponse, error) {
 	var (
-		path       = TradeEndpoint + "/v3/home/" + strconv.Itoa(accountID)
+		path       = TradeEndpoint + "/v3/home/" + strconv.FormatInt(accountID, 10)
 		u, _       = url.Parse(path)
 		headersMap = make(map[string]string)
 		response   model.GetAccountResponse
@@ -112,7 +112,6 @@ func (c *Client) GetAccountV5() (*model.GetAccountsResponseV5, error) {
 	return &response, err
 }
 
-// GetAccountV5 gets account details for account.
 func (c *Client) GetNetLiquidation(accountID int64, stTime time.Time) (*[]model.NetLiqidationTrendInner, error) {
 	var (
 		path        = UsTradeEndpointV + "/profitloss/account/listNetLiquidationTrend"
