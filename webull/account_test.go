@@ -53,7 +53,7 @@ func TestGetAccount(t *testing.T) {
 		t.FailNow()
 	}
 
-	acc, err := c.GetAccount(int(*accs.Data[0].SecAccountId))
+	acc, err := c.GetAccount(*accs.Data[0].SecAccountId)
 	asrt.Empty(err)
 	asrt.NotNil(acc)
 }
