@@ -24,3 +24,5 @@ require (
 go 1.19
 
 replace quantfu.com/webull/openapi => ../openapi
+
+replace quantfu.com/webull/client => ../client

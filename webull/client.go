@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"io/ioutil"
-
 	"encoding/hex"
 	"encoding/json"
+	"io/ioutil"
 
 	"fmt"
 	"net/http"
@@ -25,13 +24,15 @@ const (
 	BrokerQuotesGWEndpoint = "https://quotes-gw.webullbroker.com/api"
 	SecuritiesEndpoint     = "https://securitiesapi.webullbroker.com/api"
 	//UserBrokerEndpoint     = "https://userapi.webullbroker.com/api"
-	UserBrokerEndpoint = "https://userapi.webull.com/api"
+	// UserBrokerEndpoint = "https://userapi.webull.com/api"
 	//PaperTradeEndpoint     = "https://act.webullbroker.com/webull-paper-center/api"
 	PaperTradeEndpointV     = "https://act.webullfintech.com/webull-paper-center/api"
 	TradeEndpoint           = "https://tradeapi.webulltrade.com/api/trade"
 	TradeEndpointV          = "https://trade.webullfintech.com/api/trading/v1/global"
 	UsTradeEndpointV        = "https://ustrade.webullfinance.com/api/trading/v1/webull"
 	BrokerQuotesGWEndpointV = "https://quotes-gw.webullfintech.com/api"
+
+	UserBrokerEndpoint = "https://nauser.webullfintech.com/api/user/v1"
 
 	StockInfoEndpoint = "https://infoapi.webull.com/api"
 )
@@ -46,6 +47,12 @@ type userCallback func(context.Context, Topic, interface{}) error
 
 func (e *AuthExpiredError) Error() string {
 	return fmt.Sprint("Authentication token expired")
+}
+
+type MetaDataProvider interface {
+	HasData() bool
+	GetMetaMap() map[string]string
+	Save(map[string]string)
 }
 
 // Client is a helpful abstraction around some common metadata required for
@@ -71,6 +78,8 @@ type Client struct {
 	WebsocketCallbacks map[string]userCallback
 
 	sessionHeaders map[string]string
+
+	MdProvider MetaDataProvider
 }
 
 // NewClient is a constructor for the Webull-Client client

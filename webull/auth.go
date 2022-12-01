@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	// "fmt"
 	"io"
@@ -118,7 +119,8 @@ func (c *Client) Token() (*oauth2.Token, error) {
 // Login implements TokenSource
 func (c *Client) Login(creds Credentials) (err error) {
 	var (
-		u, _     = url.Parse(UserBrokerEndpoint + "/passport/login/v5/account")
+		// u, _     = url.Parse(UserBrokerEndpoint + "/passport/login/v5/account")
+		u, _     = url.Parse(UserBrokerEndpoint + "/login/account/v2")
 		hasher   = md5.New()
 		response model.PostLoginResponse
 	)
@@ -162,7 +164,13 @@ func (c *Client) Login(creds Credentials) (err error) {
 	}
 	c.AccountType = creds.AccountType
 
-	grade := int32(0)
+	// if we have meta-data passed, then
+	// copy and return
+	if c.haveMetaData(false) {
+		return
+	}
+
+	grade := int32(1)
 	rgn := int32(1)
 
 	// Login request body
@@ -176,6 +184,7 @@ func (c *Client) Login(creds Credentials) (err error) {
 		RegionId:    &rgn,
 		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
 	}
+
 	request.ExtInfo.VerificationCode = &creds.MFA
 	requestBody, _ := json.Marshal(request)
 	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
@@ -191,6 +200,10 @@ func (c *Client) Login(creds Credentials) (err error) {
 	c.AccessTokenExpiration, err = time.Parse(DefaultTokenExpiryFormat, *response.TokenExpireTime)
 	c.RefreshToken = *response.RefreshToken
 	c.UUID = *response.Uuid
+
+	// update acct meta w/tokens
+	c.updateMetaData()
+
 	return
 }
 
@@ -245,6 +258,12 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 
 	c.AccountType = creds.AccountType
 
+	// if we have meta-data passed, then
+	// copy and return
+	if c.haveMetaData(true) {
+		return
+	}
+
 	grade := int32(0)
 	rgn := int32(6)
 
@@ -280,8 +299,76 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 		tokenTimeMs := *response.Data.TradeTokenExpireIn
 		tmNowUtc := time.Now().UTC()
 		c.TradeTokenExpiration = tmNowUtc.Add(time.Duration(tokenTimeMs) * time.Millisecond) // Assuming ms?
+
+		// update acct meta w/tokens
+		c.updateMetaData()
+
 	}
 	return nil
+}
+
+func (c *Client) updateMetaData() {
+
+	if c.MdProvider != nil {
+		metaMap := c.MdProvider.GetMetaMap()
+		metaMap["AccessToken"] = c.AccessToken
+		metaMap["AccessTokenExpiration"] = strconv.FormatInt(c.AccessTokenExpiration.Unix(), 10)
+		metaMap["RefreshToken"] = c.RefreshToken
+		metaMap["Client.Uuid"] = c.UUID
+		metaMap["TradeToken"] = c.TradeToken
+		metaMap["TradeTokenExpiration"] = strconv.FormatInt(c.TradeTokenExpiration.Unix(), 10)
+		c.MdProvider.Save(metaMap)
+	}
+}
+
+func (c *Client) haveMetaData(withTrade bool) bool {
+
+	if c.MdProvider != nil {
+		var ok bool
+
+		metaMap := c.MdProvider.GetMetaMap()
+
+		c.AccessToken, ok = metaMap["AccessToken"]
+		if !ok {
+			return false
+		}
+		accessTknTmStr, ok := metaMap["AccessTokenExpiration"]
+		if !ok {
+			return false
+		}
+		accessTknTm, err := strconv.ParseInt(accessTknTmStr, 10, 64)
+		if err != nil {
+			return false
+		}
+		c.AccessTokenExpiration = time.Unix(accessTknTm, 0)
+		c.RefreshToken, ok = metaMap["RefreshToken"]
+		if !ok {
+			return false
+		}
+		c.UUID, ok = metaMap["Client.Uuid"]
+		if !ok {
+			return false
+		}
+
+		if withTrade {
+			c.TradeToken, ok = metaMap["TradeToken"]
+			if !ok || len(c.TradeToken) == 0 {
+				return false
+			}
+			tradeTknTmStr, ok := metaMap["TradeTokenExpiration"]
+			if !ok {
+				return false
+			}
+			tradeTknTm, err := strconv.ParseInt(tradeTknTmStr, 10, 64)
+			if err != nil {
+				return false
+			}
+			c.TradeTokenExpiration = time.Unix(tradeTknTm, 0)
+		}
+		return true
+	}
+
+	return false
 }
 
 // TradeLogin implements TokenSource
@@ -416,7 +503,7 @@ func (c *Client) IsTradeTokenValid() bool {
 		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - (5 * 60)) {
 			return true
 		}
-		
+
 		return false
 	}
 	return false

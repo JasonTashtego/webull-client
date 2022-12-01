@@ -8,8 +8,6 @@ import (
 	model "quantfu.com/webull/openapi"
 )
 
-var testCacher = false
-
 func TestLogin(t *testing.T) {
 	if os.Getenv("WEBULL_USERNAME") == "" {
 		t.Skip("No username set")
@@ -22,13 +20,14 @@ func TestLogin(t *testing.T) {
 		Username:    os.Getenv("WEBULL_USERNAME"),
 		Password:    os.Getenv("WEBULL_PASSWORD"),
 		AccountType: model.AccountType(2),
+		DeviceID:    os.Getenv("WEBULL_DEVID"),
 		DeviceName:  deviceName(),
 	})
 	asrt.Empty(err)
 	asrt.NotEmpty(c.AccessToken)
-	res, err := c.Token()
-	asrt.Empty(err)
-	asrt.NotNil(res)
+	// res, err := c.Token()
+	//asrt.Empty(err)
+	//asrt.NotNil(res)
 }
 
 func TestTradeToken(t *testing.T) {
@@ -48,15 +47,18 @@ func TestTradeToken(t *testing.T) {
 		Username:    os.Getenv("WEBULL_USERNAME"),
 		Password:    os.Getenv("WEBULL_PASSWORD"),
 		AccountType: model.AccountType(2),
+		DeviceID:    os.Getenv("WEBULL_DEVID"),
 		DeviceName:  deviceName(),
 	})
 	asrt.NoError(err)
 
 	// Finally get trake token
 	err = c.TradeLogin(Credentials{
-		Username:   os.Getenv("WEBULL_USERNAME"),
-		TradePIN:   os.Getenv("WEBULL_PIN"),
-		DeviceName: deviceName(),
+		Username:    os.Getenv("WEBULL_USERNAME"),
+		TradePIN:    os.Getenv("WEBULL_PIN"),
+		AccountType: model.AccountType(2),
+		DeviceID:    os.Getenv("WEBULL_DEVID"),
+		DeviceName:  deviceName(),
 	})
 	asrt.Empty(err)
 	asrt.NotEmpty(c.TradeToken)
