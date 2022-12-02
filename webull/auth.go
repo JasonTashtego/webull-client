@@ -307,6 +307,153 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 	return nil
 }
 
+// TradeLogin implements TokenSource
+func (c *Client) TradeLoginV5(creds Credentials) (err error) {
+	var (
+		// Login URL
+		u, _     = url.Parse(TradeEndpointV + "/trade/login")
+		response model.PostTradeTokenResponseData
+		hasher   = md5.New()
+		pwd      string
+	)
+
+	// Client ID
+	if creds.DeviceID != "" {
+		c.DeviceID = creds.DeviceID
+	} else {
+		if c.DeviceID == "" {
+			c.DeviceID = DefaultDeviceID
+		}
+	}
+
+	// Client Name
+	if creds.DeviceName != "" {
+		c.DeviceName = creds.DeviceName
+	} else {
+		if c.DeviceName == "" {
+			c.DeviceName = DefaultDeviceName
+		}
+	}
+
+	// Client Name
+	if creds.Username != "" {
+		c.Username = creds.Username
+	} else {
+		if c.Username == "" {
+			return fmt.Errorf("Username required")
+		}
+	}
+
+	// Client Name
+	if creds.TradePIN != "" {
+		// UTF-8 encoded salted password
+		hasher.Write([]byte(PasswordSalt + creds.TradePIN))
+		pwd = hex.EncodeToString(hasher.Sum(nil))
+		c.HashedPassword = pwd
+	} else {
+		if c.HashedPassword == "" {
+			return fmt.Errorf("Password has not been set")
+		}
+	}
+
+	c.AccountType = creds.AccountType
+
+	// if we have meta-data passed, then
+	// copy and return
+	if c.haveMetaData(true) {
+		return
+	}
+
+	grade := int32(0)
+	rgn := int32(6)
+
+	devId := DefaultDeviceID
+	devNm := DefaultDeviceName
+
+	// Login request body
+	request := model.PostLoginParametersRequest{
+		Account:     &creds.Username,
+		AccountType: &creds.AccountType,
+		DeviceId:    &devId,
+		DeviceName:  &devNm,
+		Grade:       &grade,
+		Pwd:         &c.HashedPassword,
+		RegionId:    &rgn,
+		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
+	}
+	request.ExtInfo.VerificationCode = &creds.MFA
+	requestBody, _ := json.Marshal(request)
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
+	req.Header.Add(HeaderKeyDeviceID, c.DeviceID)
+	req.Header.Add(HeaderKeyAccessToken, c.AccessToken)
+	if err != nil {
+		return errors.Wrap(err, "could not create request")
+	}
+	// Send and parse request
+	err = c.DoAndDecode(req, &response)
+	if err != nil {
+		return err
+	}
+	c.TradeToken = *response.TradeToken
+	tokenTimeMs := *response.TradeTokenExpireIn
+	tmNowUtc := time.Now().UTC()
+	c.TradeTokenExpiration = tmNowUtc.Add(time.Duration(tokenTimeMs) * time.Millisecond) // Assuming ms?
+
+	// snap tokens
+	c.updateMetaData()
+
+	return nil
+}
+
+// GetMFA requests for a 2FA code
+func (c *Client) GetMFA(creds Credentials) (err error) {
+	var (
+		// Login URL
+		u, _        = url.Parse(UserBrokerEndpoint + "/passport/verificationCode/sendCode")
+		response    interface{}
+		queryParams = make(map[string]string)
+		headersMap  = make(map[string]string)
+	)
+
+	// Client ID
+	c.DeviceID = creds.DeviceID
+	if c.DeviceID == "" {
+		c.DeviceID = DefaultDeviceID
+	}
+
+	headersMap["did"] = c.DeviceID
+
+	queryParams["deviceId"] = c.DeviceID
+	queryParams["accountType"] = fmt.Sprintf("%d", creds.AccountType)
+	queryParams["account"] = creds.Username
+	queryParams["codeType"] = "5"
+	queryParams["regionCode"] = "1"
+
+	if err != nil {
+		return errors.Wrap(err, "could not create request")
+	}
+	// Send and parse request
+	err = c.PostAndDecode(*u, response, &headersMap, &queryParams, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *Client) IsTradeTokenValid() bool {
+	if len(c.TradeToken) > 0 {
+		tmNow := time.Now().UTC()
+
+		// 5-min early renwal, token time is at least 5 minutes in the future
+		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - (5 * 60)) {
+			return true
+		}
+
+		return false
+	}
+	return false
+}
+
 func (c *Client) updateMetaData() {
 
 	if c.MdProvider != nil {
@@ -368,143 +515,5 @@ func (c *Client) haveMetaData(withTrade bool) bool {
 		return true
 	}
 
-	return false
-}
-
-// TradeLogin implements TokenSource
-func (c *Client) TradeLoginV5(creds Credentials) (err error) {
-	var (
-		// Login URL
-		u, _     = url.Parse(TradeEndpointV + "/trade/login")
-		response model.PostTradeTokenResponseData
-		hasher   = md5.New()
-		pwd      string
-	)
-
-	// Client ID
-	if creds.DeviceID != "" {
-		c.DeviceID = creds.DeviceID
-	} else {
-		if c.DeviceID == "" {
-			c.DeviceID = DefaultDeviceID
-		}
-	}
-
-	// Client Name
-	if creds.DeviceName != "" {
-		c.DeviceName = creds.DeviceName
-	} else {
-		if c.DeviceName == "" {
-			c.DeviceName = DefaultDeviceName
-		}
-	}
-
-	// Client Name
-	if creds.Username != "" {
-		c.Username = creds.Username
-	} else {
-		if c.Username == "" {
-			return fmt.Errorf("Username required")
-		}
-	}
-
-	// Client Name
-	if creds.TradePIN != "" {
-		// UTF-8 encoded salted password
-		hasher.Write([]byte(PasswordSalt + creds.TradePIN))
-		pwd = hex.EncodeToString(hasher.Sum(nil))
-		c.HashedPassword = pwd
-	} else {
-		if c.HashedPassword == "" {
-			return fmt.Errorf("Password has not been set")
-		}
-	}
-
-	c.AccountType = creds.AccountType
-
-	grade := int32(0)
-	rgn := int32(6)
-
-	devId := DefaultDeviceID
-	devNm := DefaultDeviceName
-
-	// Login request body
-	request := model.PostLoginParametersRequest{
-		Account:     &creds.Username,
-		AccountType: &creds.AccountType,
-		DeviceId:    &devId,
-		DeviceName:  &devNm,
-		Grade:       &grade,
-		Pwd:         &c.HashedPassword,
-		RegionId:    &rgn,
-		ExtInfo:     model.NewPostLoginParametersRequestExtInfo(),
-	}
-	request.ExtInfo.VerificationCode = &creds.MFA
-	requestBody, _ := json.Marshal(request)
-	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(requestBody))
-	req.Header.Add(HeaderKeyDeviceID, c.DeviceID)
-	req.Header.Add(HeaderKeyAccessToken, c.AccessToken)
-	if err != nil {
-		return errors.Wrap(err, "could not create request")
-	}
-	// Send and parse request
-	err = c.DoAndDecode(req, &response)
-	if err != nil {
-		return err
-	}
-	c.TradeToken = *response.TradeToken
-
-	tokenTimeMs := *response.TradeTokenExpireIn
-	tmNowUtc := time.Now().UTC()
-	c.TradeTokenExpiration = tmNowUtc.Add(time.Duration(tokenTimeMs) * time.Millisecond) // Assuming ms?
-	return nil
-}
-
-// GetMFA requests for a 2FA code
-func (c *Client) GetMFA(creds Credentials) (err error) {
-	var (
-		// Login URL
-		u, _        = url.Parse(UserBrokerEndpoint + "/passport/verificationCode/sendCode")
-		response    interface{}
-		queryParams = make(map[string]string)
-		headersMap  = make(map[string]string)
-	)
-
-	// Client ID
-	c.DeviceID = creds.DeviceID
-	if c.DeviceID == "" {
-		c.DeviceID = DefaultDeviceID
-	}
-
-	headersMap["did"] = c.DeviceID
-
-	queryParams["deviceId"] = c.DeviceID
-	queryParams["accountType"] = fmt.Sprintf("%d", creds.AccountType)
-	queryParams["account"] = creds.Username
-	queryParams["codeType"] = "5"
-	queryParams["regionCode"] = "1"
-
-	if err != nil {
-		return errors.Wrap(err, "could not create request")
-	}
-	// Send and parse request
-	err = c.PostAndDecode(*u, response, &headersMap, &queryParams, nil)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (c *Client) IsTradeTokenValid() bool {
-	if len(c.TradeToken) > 0 {
-		tmNow := time.Now().UTC()
-
-		// 5-min early renwal, token time is at least 5 minutes in the future
-		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - (5 * 60)) {
-			return true
-		}
-
-		return false
-	}
 	return false
 }
