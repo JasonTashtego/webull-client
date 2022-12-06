@@ -167,7 +167,13 @@ func (c *Client) Login(creds Credentials) (err error) {
 	// if we have meta-data passed, then
 	// copy and return
 	if c.haveMetaData(false) {
-		return
+
+		// check that it's good.
+		_, err = c.GetAccounts()
+		if err == nil {
+			return nil
+		}
+		c.expireTokens()
 	}
 
 	grade := int32(1)
@@ -259,9 +265,15 @@ func (c *Client) TradeLogin(creds Credentials) (err error) {
 	c.AccountType = creds.AccountType
 
 	// if we have meta-data passed, then
-	// copy and return
+	// copy. test  and return
 	if c.haveMetaData(true) {
-		return
+		id, err := c.GetAccountID()
+		if err == nil {
+			_, err := c.GetOrders(strconv.FormatInt(id, 10), "all", 10)
+			if err == nil {
+				return nil
+			}
+		}
 	}
 
 	grade := int32(0)
@@ -359,9 +371,12 @@ func (c *Client) TradeLoginV5(creds Credentials) (err error) {
 	c.AccountType = creds.AccountType
 
 	// if we have meta-data passed, then
-	// copy and return
+	// copy, test and return
 	if c.haveMetaData(true) {
-		return
+		_, err = c.GetAccountsV5()
+		if err == nil {
+			return nil
+		}
 	}
 
 	grade := int32(0)
@@ -516,4 +531,11 @@ func (c *Client) haveMetaData(withTrade bool) bool {
 	}
 
 	return false
+}
+
+func (c *Client) expireTokens() {
+	c.AccessTokenExpiration = time.Now().AddDate(-1, 0, 0)
+	c.AccessToken = ""
+	c.TradeTokenExpiration = time.Now().AddDate(-1, 0, 0)
+	c.TradeToken = ""
 }

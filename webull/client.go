@@ -6,9 +6,8 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"encoding/json"
-	"io/ioutil"
-
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -237,39 +236,47 @@ func (c *Client) DoAndDecode(req *http.Request, dest interface{}) (err error) {
 		return err
 	}
 
-	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	defer func() {
+		_ = res.Body.Close()
+	}()
+
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return fmt.Errorf("Got read error on body: %s", err.Error())
 	}
+
+	var e model.ErrorBody
 	if res.StatusCode/100 != 2 {
 		b := &bytes.Buffer{}
-		var e model.ErrorBody
 		err = json.Unmarshal(body, &e)
 		if err != nil {
 			// anything
 			if anyBody, err = parseAnything(body); err != nil {
-				return fmt.Errorf("Unable to marshal body as interface")
+				return fmt.Errorf("Unable to unmarshal body as interface")
 			}
 			dest = anyBody
 			return fmt.Errorf("got response %q and could not decode error body %q", res.Status, b.String())
 		}
 		// anything
 		if anyBody, err = parseAnything(body); err != nil {
-			return fmt.Errorf("Unable to marshal body as interface")
+			return fmt.Errorf("Unable to unmarshal body as interface")
 		}
 		dest = anyBody
 		return fmt.Errorf(*e.Msg)
 	}
 	if err = json.Unmarshal(body, &dest); err != nil {
-		// anything
-		if anyBody, err = parseAnything(body); err != nil {
-			return fmt.Errorf("Unable to marshal body as interface")
+		// handle 200? w/error body
+		err = json.Unmarshal(body, &e)
+		if err != nil {
+			// anything
+			var err2 error
+			if anyBody, err2 = parseAnything(body); err2 != nil {
+				return fmt.Errorf("Unable to unmarshal body as interface")
+			}
+			dest = anyBody
+		} else {
+			return fmt.Errorf(*e.Msg)
 		}
 	}
-	// anything: uncomment for viewing raw response
-	//if anyBody, err := parseAnything(body); err != nil {
-	//	return fmt.Errorf("Unable to marshal body as interface")
-	//}
 	return err
 }
