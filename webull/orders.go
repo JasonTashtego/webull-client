@@ -237,6 +237,7 @@ func (c *Client) GetOrdersV5(accountID int64, status model.OrderStatus, stTime t
 		input.StartTimeStr = "2015-01-01"
 	}
 	if endTime.Year() > 2000 {
+		input.LastCreateTime0 = endTime.Unix() * 1000
 		input.EndTimeStr = endTime.Format("2006-01-02")
 	}
 

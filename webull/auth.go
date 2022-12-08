@@ -455,15 +455,13 @@ func (c *Client) GetMFA(creds Credentials) (err error) {
 	return nil
 }
 
-func (c *Client) IsTradeTokenValid() bool {
+func (c *Client) IsTradeTokenValid(window int64) bool {
 	if len(c.TradeToken) > 0 {
 		tmNow := time.Now().UTC()
-
-		// 5-min early renwal, token time is at least 5 minutes in the future
-		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - (5 * 60)) {
+		// win early renwal, token time is at least window+ in the future
+		if c.TradeTokenExpiration.Unix() > (tmNow.Unix() - window) {
 			return true
 		}
-
 		return false
 	}
 	return false
@@ -512,6 +510,13 @@ func (c *Client) haveMetaData(withTrade bool) bool {
 			return false
 		}
 
+		if accessTknTm < time.Now().Unix() {
+			c.AccessTokenExpiration = time.Now().AddDate(-1, 0, 0)
+			c.AccessToken = ""
+			return false
+		}
+
+
 		if withTrade {
 			c.TradeToken, ok = metaMap["TradeToken"]
 			if !ok || len(c.TradeToken) == 0 {
@@ -526,6 +531,13 @@ func (c *Client) haveMetaData(withTrade bool) bool {
 				return false
 			}
 			c.TradeTokenExpiration = time.Unix(tradeTknTm, 0)
+
+			if tradeTknTm < time.Now().Unix() {
+				c.TradeTokenExpiration = time.Now().AddDate(-1, 0, 0)
+				c.TradeToken = ""
+				return false
+			}
+
 		}
 		return true
 	}
