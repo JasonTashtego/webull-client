@@ -204,6 +204,10 @@ func (c *Client) Login(creds Credentials) (err error) {
 	}
 	c.AccessToken = *response.AccessToken
 	c.AccessTokenExpiration, err = time.Parse(DefaultTokenExpiryFormat, *response.TokenExpireTime)
+	if err != nil {
+		// default to +1 week.
+		c.AccessTokenExpiration = time.Now().AddDate(0,0,7)
+	}
 	c.RefreshToken = *response.RefreshToken
 	c.UUID = *response.Uuid
 
