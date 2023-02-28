@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"quantfu.com/webull/client/internal"
 	"time"
 
 	model "quantfu.com/webull/openapi"
@@ -35,6 +36,10 @@ const (
 
 	StockInfoEndpoint = "https://infoapi.webull.com/api"
 )
+
+// HTTPClient is the context key to use with golang.org/x/net/context's
+// WithValue function to associate an *http.Client value with a context.
+var HTTPClient internal.ContextKey
 
 // ErrAuthExpired signals the user must retrieve a new token
 //var ErrAuthExpired = errors.New("Authentication token expired")
@@ -104,6 +109,31 @@ func NewClient(creds *Credentials) (c *Client, err error) {
 		}
 	}
 	return
+}
+
+func NewClientWithContext(ctx context.Context, creds *Credentials) (c *Client, err error) {
+	httpCln := internal.ContextClient(ctx)
+	c = &Client{
+		httpClient: httpCln,
+	}
+	c.sessionHeaders = make(map[string]string)
+	if creds != nil {
+		c.DeviceID = creds.DeviceID
+		c.Username = creds.Username
+		c.AccountType = creds.AccountType
+		if creds.DeviceID == "" {
+			c.DeviceID = DefaultDeviceID
+		}
+		hasher := md5.New()
+		hasher.Write([]byte(PasswordSalt + creds.Password))
+		c.HashedPassword = hex.EncodeToString(hasher.Sum(nil))
+		_, err = c.Token()
+		if err != nil {
+			return nil, err
+		}
+	}
+	return
+
 }
 
 func (c *Client) HttpClient() *http.Client {
