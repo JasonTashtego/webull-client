@@ -305,7 +305,7 @@ func (c *Client) DoAndDecode(req *http.Request, dest interface{}) (err error) {
 			}
 			dest = anyBody
 		} else {
-			return fmt.Errorf(*e.Msg)
+			return nil
 		}
 	}
 	return err
