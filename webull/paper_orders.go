@@ -13,13 +13,13 @@ import (
 
 // CancelAllPaperOrders is a wrapper for cancelling a number of WORKING orders.
 // Note: no pagination so no guarantee all orders will cancel
-func (c *Client) CancelAllPaperOrders(accountID int64) ([]int64, error) {
+func (c *Client) CancelAllPaperOrders(accountID int64) ([]string, error) {
 	if paperOrders, err := c.GetPaperOrders(accountID, model.WORKING, time.Unix(0, 0), 200); err != nil {
 		return nil, err
 	} else if paperOrders == nil {
 		return nil, fmt.Errorf("no orders returned")
 	} else {
-		cancelledOrders := make([]int64, 0)
+		cancelledOrders := make([]string, 0)
 		for _, order := range paperOrders {
 			cancellation, err := c.CancelPaperOrder(accountID, *order.OrderId)
 			if err != nil {
@@ -63,9 +63,9 @@ func (c *Client) PlacePaperOrder(accountID int64, input model.PostStockOrderRequ
 }
 
 // CancelPaperOrder cancels paper trade
-func (c *Client) CancelPaperOrder(accountID int64, oid int64) (*interface{}, error) {
+func (c *Client) CancelPaperOrder(accountID int64, oid string) (*interface{}, error) {
 	var (
-		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/cancel/" + strconv.FormatInt(oid, 10))
+		u, _       = url.Parse(PaperTradeEndpointV + "/paper/1/acc/" + strconv.FormatInt(accountID, 10) + "/orderop/cancel/" + oid)
 		headersMap = make(map[string]string)
 	)
 	var response interface{}

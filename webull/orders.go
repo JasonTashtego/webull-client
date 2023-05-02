@@ -95,8 +95,8 @@ func (c *Client) PlaceOrder(accountID int64, input model.PostStockOrderRequest) 
 	if err != nil {
 		return &response, err
 	}
-	if response.OrderId == nil || *response.OrderId == 0 {
-		err = fmt.Errorf("OrderId should not be 0")
+	if response.OrderId == nil || len(*response.OrderId) == 0 {
+		err = fmt.Errorf("Place order failed")
 	}
 	return &response, err
 }
@@ -373,8 +373,8 @@ func (c *Client) PlaceOrderV5(accountID int64, input model.PostStockOrderRequest
 	if err != nil {
 		return &response, err
 	}
-	if response.OrderId == nil || *response.OrderId == 0 {
-		err = fmt.Errorf("OrderId should not be 0")
+	if response.OrderId == nil || len(*response.OrderId) == 0 {
+		err = fmt.Errorf("Place order failed")
 	}
 	return &response, err
 }
